@@ -10,5 +10,5 @@ public class Main {
             new AuthSwingController(authView); // Controller가 View에 이벤트 리스너 연결
             authView.setVisible(true); // 창 띄우기
         });
-    }
+    } // hihihi
 }
