@@ -1,0 +1,26 @@
+# mac
+.DS_Store
+
+# Visual Studio / MFC
+Debug/
+Release/
+x64/
+*.ilk
+*.pdb
+*.obj
+*.exe
+*.log
+*.tlog
+*.cache
+*.user
+*.ipch
+*.sdf
+*.opensdf
+
+# Java (Maven)
+target/
+*.class
+*.jar
+.settings/
+.idea/
+*.iml
