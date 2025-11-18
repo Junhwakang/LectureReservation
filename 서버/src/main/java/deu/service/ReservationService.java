@@ -7,6 +7,9 @@ import deu.model.entity.RoomReservation;
 import deu.repository.ReservationRepository;
 import deu.model.dto.response.BasicResponse;
 import lombok.Getter;
+import deu.service.reservation.validation.ReservationValidator;
+import deu.service.reservation.validation.DuplicateReservationValidationStrategy;
+import deu.service.reservation.validation.WeeklyLimitReservationValidationStrategy;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -20,11 +23,16 @@ public class ReservationService {
     @Getter
     private static final ReservationService instance = new ReservationService();
 
-    private ReservationService() {}
+    private final ReservationValidator reservationValidator;
+    private ReservationService() {
+        this.reservationValidator = new ReservationValidator()
+                .addStrategy(new DuplicateReservationValidationStrategy()) // SFR-203 전략패턴 
+                .addStrategy(new WeeklyLimitReservationValidationStrategy());   // SFR-211 전략패턴
+    }
 
     // 사용자 관점 ========================================================================================================
 
-    // 예약 신청
+    // 예약 신청 // SFR-203 중복예약
     public BasicResponse createRoomReservation(RoomReservationRequest payload) {
         try {
             // RoomReservation 엔티티 생성
@@ -64,6 +72,9 @@ public class ReservationService {
                 return new BasicResponse("403", "오늘부터 7일 간 최대 5개의 예약만 가능합니다.");
             }
 
+             // SFR-203, 211: Strategy 기반 중복 예약 검증
+            reservationValidator.validate(payload, repo, userReservations);
+            
             // 동일 시간 사용자 중복 예약 체크
             for (RoomReservation r : userReservations) {
                 if (r.getDate().equals(payload.getDate()) &&
