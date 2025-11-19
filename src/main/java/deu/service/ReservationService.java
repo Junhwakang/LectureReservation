@@ -4,6 +4,7 @@ import deu.model.dto.request.data.reservation.DeleteRoomReservationRequest;
 import deu.model.dto.request.data.reservation.RoomReservationLocationRequest;
 import deu.model.dto.request.data.reservation.RoomReservationRequest;
 import deu.model.entity.RoomReservation;
+import deu.observer.ReservationSubject;
 import deu.repository.ReservationRepository;
 import deu.model.dto.response.BasicResponse;
 import lombok.Getter;
@@ -12,19 +13,29 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.UUID;
 
 public class ReservationService {
 
     // 싱글톤 인스턴스
     @Getter
     private static final ReservationService instance = new ReservationService();
+    
+    // 옵저버 패턴: 관리자에게 알림을 보내기 위한 Subject (새로 추가)
+    private ReservationSubject adminNotificationSubject;
 
     private ReservationService() {}
+    
+    /**
+     * 관리자 알림용 Subject 설정
+     * ReservationManagementController에서 주입받음
+     */
+    public void setAdminNotificationSubject(ReservationSubject subject) {
+        this.adminNotificationSubject = subject;
+    }
 
     // 사용자 관점 ========================================================================================================
 
-    // 예약 신청
+    // 예약 신청 (옵저버 패턴 추가)
     public BasicResponse createRoomReservation(RoomReservationRequest payload) {
         try {
             // RoomReservation 엔티티 생성
@@ -55,7 +66,7 @@ public class ReservationService {
                             LocalDate date = LocalDate.parse(r.getDate());
                             return !date.isBefore(today) && !date.isAfter(maxDate);
                         } catch (Exception e) {
-                            return false; // 날짜 파싱 실패한 항목은 무시
+                            return false;
                         }
                     })
                     .count();
@@ -85,6 +96,15 @@ public class ReservationService {
 
             // 최종 저장
             repo.save(roomReservation);
+            
+            // 👇 새로 추가: 관리자에게 알림 전송
+            if (adminNotificationSubject != null) {
+                adminNotificationSubject.notifyObservers(
+                    roomReservation, 
+                    "새로운 예약 신청이 접수되었습니다. 승인이 필요합니다."
+                );
+            }
+            
             return new BasicResponse("200", "예약이 완료되었습니다.");
 
         } catch (Exception e) {
@@ -93,7 +113,7 @@ public class ReservationService {
         }
     }
 
-    // 개인별 예약 삭제 TODO: number 와 id에 해당하는 RoomReservation 의 number가 동일하면 삭제 / 다르면 비정상적인 접근 처리
+    // 개인별 예약 삭제
     public BasicResponse deleteRoomReservationFromUser(DeleteRoomReservationRequest payload) {
         RoomReservation target = ReservationRepository.getInstance().findById(payload.roomReservationId);
 
@@ -109,7 +129,7 @@ public class ReservationService {
         return new BasicResponse("200", "예약이 삭제되었습니다.");
     }
 
-    // 개인별 주간 예약 조회 반환: 7x13 배열 (당일 ~ +6일) TODO: RoomReservation[7][13]
+    // 개인별 주간 예약 조회 반환: 7x13 배열
     public BasicResponse weekRoomReservationByUserNumber(String payload) {
         RoomReservation[][] schedule = new RoomReservation[7][13];
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -138,18 +158,18 @@ public class ReservationService {
         return new BasicResponse("200", schedule);
     }
 
-    // 사용자별 예약 리스트 조회 TODO: 동일하게 당일 + 6 일 뒤의정보를 반환해야 한다.
+    // 사용자별 예약 리스트 조회
     public BasicResponse getReservationsByUser(String payload) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         LocalDate today = LocalDate.now();
-        LocalDate endDate = today.plusDays(6); // 오늘부터 6일 후까지 포함
+        LocalDate endDate = today.plusDays(6);
 
         List<RoomReservation> reservations = ReservationRepository.getInstance()
                 .findByUser(payload).stream()
                 .filter(r -> {
                     try {
                         LocalDate date = LocalDate.parse(r.getDate(), formatter);
-                        return !date.isBefore(today) && !date.isAfter(endDate); // today ≤ date ≤ today+6
+                        return !date.isBefore(today) && !date.isAfter(endDate);
                     } catch (Exception e) {
                         return false;
                     }
@@ -158,7 +178,6 @@ public class ReservationService {
 
         return new BasicResponse("200", reservations);
     }
-
 
     // 통합 관점 ==========================================================================================================
 
@@ -183,7 +202,6 @@ public class ReservationService {
             original.setStartTime(payload.getStartTime());
             original.setEndTime(payload.getEndTime());
 
-            // 파일 저장
             repo.saveToFile();
 
             return new BasicResponse("200", "예약이 수정되었습니다.");
@@ -193,7 +211,7 @@ public class ReservationService {
         }
     }
 
-    // 건물 강의실별 주간 예약 조회 반환: 7x13 배열 (당일 +6일 까지) TODO: RoomReservation[7][13]
+    // 건물 강의실별 주간 예약 조회 반환
     public BasicResponse weekRoomReservationByLectureroom(RoomReservationLocationRequest payload) {
         RoomReservation[][] schedule = new RoomReservation[7][13];
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -225,7 +243,6 @@ public class ReservationService {
         return new BasicResponse("200", schedule);
     }
 
-
     // 관리자 관점 ========================================================================================================
 
     // 관리자 예약 삭제
@@ -238,7 +255,7 @@ public class ReservationService {
         return new BasicResponse("404", "예약을 찾을 수 없습니다.");
     }
 
-    // 예약 상태 변경 "대기 -> 완료"
+    // 예약 상태 변경
     public BasicResponse changeRoomReservationStatus(String payload) {
         RoomReservation target = ReservationRepository.getInstance().findById(payload);
         if (target == null) {
@@ -258,6 +275,4 @@ public class ReservationService {
 
         return new BasicResponse("200", result);
     }
-
-    // =================================================================================================================
 }

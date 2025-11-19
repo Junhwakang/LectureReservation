@@ -58,9 +58,29 @@ public class SystemController {
             else if (request instanceof ReservationManagementCommandRequest r) {
                 return switch (r.command) {
                     case "예약 수정" -> reservationManagementController.handleModifyRoomReservation((RoomReservationRequest) r.payload);
-                    case "예약 삭제" -> reservationManagementController.handleDeleteRoomReservation((String) r.payload);
+                    case "예약 삭제" -> {
+                        if (r.payload instanceof String[]) {
+                            String[] data = (String[]) r.payload;
+                            yield reservationManagementController.handleDeleteRoomReservationWithReason(data[0], data.length > 1 ? data[1] : "");
+                        }
+                        yield reservationManagementController.handleDeleteRoomReservation((String) r.payload);
+                    }
+                    case "예약 취소 (사유 포함)" -> {
+                        if (r.payload instanceof String[]) {
+                            String[] data = (String[]) r.payload;
+                            yield reservationManagementController.handleDeleteRoomReservationWithReason(data[0], data.length > 1 ? data[1] : "");
+                        }
+                        yield new BasicResponse("400", "잘못된 요청 형식");
+                    }
                     case "예약 대기 전체 조회" -> reservationManagementController.handleFindAllRoomReservation();
                     case "예약 상태 변경" -> reservationManagementController.handleChangeRoomReservationStatus((String) r.payload);
+                    case "예약 거부" -> {
+                        if (r.payload instanceof String[]) {
+                            String[] data = (String[]) r.payload;
+                            yield reservationManagementController.handleRejectRoomReservation(data[0], data.length > 1 ? data[1] : "");
+                        }
+                        yield new BasicResponse("400", "잘못된 요청 형식");
+                    }
                     default -> new BasicResponse("404", "알 수 없는 명령어");
                 };
             }
