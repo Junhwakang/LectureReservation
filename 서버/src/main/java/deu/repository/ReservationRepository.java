@@ -11,23 +11,24 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ReservationRepository {
+public class ReservationRepository extends AbstractYamlRepository<RoomReservation,ReservationRepository.RoomReservationWrapper> {
 
-    private static final String FILE_PATH = System.getProperty("user.dir") + File.separator + "data" + File.separator + "reservations.yaml";
+    private static final String FILE_PATH =
+            System.getProperty("user.dir") + File.separator + "data" + File.separator + "reservations.yaml";
 
     @Getter
     private static final ReservationRepository instance = new ReservationRepository();
 
     private final List<RoomReservation> roomReservationList = new ArrayList<>();
-    private final Yaml yaml;
+    // private final Yaml yaml;
 
-    // Wrapper 클래스 (YAML 상단에 키 유지)
+    // YAML Wrapper 클래스 (YAML 상단에 키 유지)
     public static class RoomReservationWrapper {
         public List<RoomReservation> reservations = new ArrayList<>();
     }
 
     private ReservationRepository() {
-        DumperOptions options = new DumperOptions();
+        /*DumperOptions options = new DumperOptions();
         options.setPrettyFlow(true);
         options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
 
@@ -39,9 +40,10 @@ public class ReservationRepository {
         this.yaml = new Yaml(representer, options);
 
         createDataDirectoryIfNeeded();
-        loadFromFile();
+        loadFromFile();*/
+        super(FILE_PATH,RoomReservationWrapper.class);  // 추상클래스 생성자 호출
     }
-
+    /*
     // 디렉토리 생성
     private void createDataDirectoryIfNeeded() {
         File file = new File(FILE_PATH);
@@ -49,24 +51,24 @@ public class ReservationRepository {
         if (!parentDir.exists()) {
             parentDir.mkdirs();
         }
-    }
+    }*/
 
     // 예약 저장
     public void save(RoomReservation reservation) {
         roomReservationList.add(reservation);
-        saveToFile();
+        saveAllToFile();    // 템플릿 메서드 호출
     }
 
     // 예약 삭제 (객체 기준)
     public void delete(RoomReservation reservation) {
         roomReservationList.remove(reservation);
-        saveToFile();
+        saveAllToFile();
     }
 
     // 예약 ID로 삭제
     public boolean deleteById(String id) {
         boolean result = roomReservationList.removeIf(r -> r.getId().equals(id));
-        if (result) saveToFile();
+        if (result) saveAllToFile();
         return result;
     }
 
@@ -106,6 +108,7 @@ public class ReservationRepository {
         return false;
     }
 
+    /*
     // 전체 저장
     public void saveToFile() {
         createDataDirectoryIfNeeded();
@@ -117,8 +120,10 @@ public class ReservationRepository {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
+    }*/
 
+
+    /*
     // 초기 로딩
     private void loadFromFile() {
         File file = new File(FILE_PATH);
@@ -133,11 +138,48 @@ public class ReservationRepository {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
+    }*/
 
     // 테스트용: 전체 예약 삭제
     public void clear() {
         roomReservationList.clear();
-        saveToFile();
+        saveAllToFile();
+    }
+    
+    public void saveToFile(){
+        saveAllToFile();    // 템플릿 메서드 랩핑
+    }
+    
+    
+    
+    // 추상클래스 구현 부분
+    /** SnakeYAML에 등록해야 하는 클래스 태그 설정 */
+    @Override
+    protected void setupClassTags(Representer representer){
+        representer.addClassTag(RoomReservationWrapper.class,Tag.MAP);
+        representer.addClassTag(RoomReservation.class, Tag.MAP);
+    }
+
+    /** 파일에서 읽어온 wrapper를 내부 리스트에 반영 */
+    @Override
+    protected void applyLoadedWrapper(RoomReservationWrapper wrapper){
+        if(wrapper != null && wrapper.reservations != null){
+            roomReservationList.clear();
+            roomReservationList.addAll(wrapper.reservations);
+        }
+    }
+
+    /** 현재 내부 리스트를 기반으로 wrapper를 만들어 저장 */
+    @Override
+    protected RoomReservationWrapper createWrapperForSave(){
+        RoomReservationWrapper wrapper = new RoomReservationWrapper();
+        wrapper.reservations = roomReservationList;
+        return wrapper;
+    }
+
+    /** 내부에서 관리하는 실제 엔티티 리스트 */
+    @Override
+    protected List<RoomReservation> getEntityList() {
+        return roomReservationList;
     }
 }

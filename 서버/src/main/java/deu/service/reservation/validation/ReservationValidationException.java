@@ -8,7 +8,7 @@ package deu.service.reservation.validation;
  *
  * @author User
  */
-class ReservationValidationException extends Exception {
+public class ReservationValidationException extends Exception {
     public ReservationValidationException(String message) {
         super(message);
     }

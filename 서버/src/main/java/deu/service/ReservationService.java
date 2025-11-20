@@ -10,6 +10,7 @@ import lombok.Getter;
 import deu.service.reservation.validation.ReservationValidator;
 import deu.service.reservation.validation.DuplicateReservationValidationStrategy;
 import deu.service.reservation.validation.WeeklyLimitReservationValidationStrategy;
+import deu.service.reservation.validation.ReservationValidationException;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -24,6 +25,7 @@ public class ReservationService {
     private static final ReservationService instance = new ReservationService();
 
     private final ReservationValidator reservationValidator;
+
     private ReservationService() {
         this.reservationValidator = new ReservationValidator()
                 .addStrategy(new DuplicateReservationValidationStrategy()) // SFR-203 전략패턴 
@@ -31,7 +33,6 @@ public class ReservationService {
     }
 
     // 사용자 관점 ========================================================================================================
-
     // 예약 신청 // SFR-203 중복예약
     public BasicResponse createRoomReservation(RoomReservationRequest payload) {
         try {
@@ -48,13 +49,20 @@ public class ReservationService {
             roomReservation.setStartTime(payload.getStartTime());
             roomReservation.setEndTime(payload.getEndTime());
 
+            //Repo 조회
             ReservationRepository repo = ReservationRepository.getInstance();
-
-            // 날짜 필터: 오늘부터 7일간
-            LocalDate today = LocalDate.now();
-            LocalDate maxDate = today.plusDays(6);
-
             List<RoomReservation> userReservations = repo.findByUser(payload.getNumber());
+
+            //WeeklyLimit,,,  클래스에서 담당.
+            // SFR-211에 해당
+
+            // 일단 냅두고 나중에 지울 예정
+            /*
+            // 날짜 필터: 오늘부터 7일간
+            //LocalDate today = LocalDate.now();
+            //LocalDate maxDate = today.plusDays(6);
+
+            
 
             // 예약 수 제한
             long countWithin7Days = userReservations.stream()
@@ -70,34 +78,43 @@ public class ReservationService {
 
             if (countWithin7Days >= 5) {
                 return new BasicResponse("403", "오늘부터 7일 간 최대 5개의 예약만 가능합니다.");
-            }
-
-             // SFR-203, 211: Strategy 기반 중복 예약 검증
+            }*/
+            // SFR-203, 211: Strategy 기반 중복 예약 검증
             reservationValidator.validate(payload, repo, userReservations);
-            
-            // 동일 시간 사용자 중복 예약 체크
-            for (RoomReservation r : userReservations) {
-                if (r.getDate().equals(payload.getDate()) &&
-                        r.getStartTime().equals(payload.getStartTime())) {
-                    return new BasicResponse("409", "같은 시간대에 이미 예약이 존재합니다.");
-                }
-            }
 
+            /*/* Duplicate... 클래스에서 담당 SFR-203에 해당
+            // 동일 시간 사용자 중복 예약 체크
+            
+            
+            // 일단 냅두고 나중에 지울 예정
+            for (RoomReservation r : userReservations) {
+            if (r.getDate().equals(payload.getDate()) &&
+            r.getStartTime().equals(payload.getStartTime())) {
+            return new BasicResponse("409", "같은 시간대에 이미 예약이 존재합니다.");
+            }
+            }
+            
+            /*
             // 강의실 동일 시간 중복 체크
             boolean isDup = repo.isDuplicate(
-                    roomReservation.getDate(),
-                    roomReservation.getStartTime(),
-                    roomReservation.getLectureRoom()
+            roomReservation.getDate(),
+            roomReservation.getStartTime(),
+            roomReservation.getLectureRoom()
             );
-
+            
             if (isDup) {
-                return new BasicResponse("409", "해당 시간에 다른 예약이 존재합니다.");
+            return new BasicResponse("409", "해당 시간에 다른 예약이 존재합니다.");
             }
-
+            */
+ 
+ 
             // 최종 저장
             repo.save(roomReservation);
             return new BasicResponse("200", "예약이 완료되었습니다.");
 
+        } catch (ReservationValidationException e) {
+            // 전략에서 던진 예외 → 적절한 코드로 매핑
+            return new BasicResponse("409", e.getMessage());
         } catch (Exception e) {
             e.printStackTrace();
             return new BasicResponse("500", "서버 오류: " + e.getMessage());
@@ -143,7 +160,8 @@ public class ReservationService {
                 if (dayIndex >= 0 && dayIndex < 7 && periodIndex >= 0 && periodIndex < 13) {
                     schedule[dayIndex][periodIndex] = r;
                 }
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
         }
 
         return new BasicResponse("200", schedule);
@@ -170,9 +188,7 @@ public class ReservationService {
         return new BasicResponse("200", reservations);
     }
 
-
     // 통합 관점 ==========================================================================================================
-
     // 예약 수정
     public BasicResponse modifyRoomReservation(RoomReservationRequest payload) {
         try {
@@ -211,9 +227,9 @@ public class ReservationService {
         LocalDate today = LocalDate.now();
 
         List<RoomReservation> reservations = ReservationRepository.getInstance().findAll().stream()
-                .filter(r -> r.getBuildingName().equals(payload.building) &&
-                        r.getFloor().equals(payload.floor) &&
-                        r.getLectureRoom().equals(payload.lectureroom))
+                .filter(r -> r.getBuildingName().equals(payload.building)
+                && r.getFloor().equals(payload.floor)
+                && r.getLectureRoom().equals(payload.lectureroom))
                 .filter(r -> {
                     try {
                         LocalDate date = LocalDate.parse(r.getDate(), formatter);
@@ -230,15 +246,14 @@ public class ReservationService {
                 if (dayIndex >= 0 && dayIndex < 7 && periodIndex >= 0 && periodIndex < 13) {
                     schedule[dayIndex][periodIndex] = r;
                 }
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
         }
 
         return new BasicResponse("200", schedule);
     }
 
-
     // 관리자 관점 ========================================================================================================
-
     // 관리자 예약 삭제
     public BasicResponse deleteRoomReservationFromManagement(String payload) {
         boolean deleted = ReservationRepository.getInstance().deleteById(payload);

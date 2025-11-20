@@ -17,7 +17,7 @@ import java.util.List;
  * 사용자 정보를 YAML 파일로 관리하는 저장소 클래스
  * 싱글톤 패턴을 사용하며, 파일이 없을 경우 resources에서 복사하여 생성한다.
  */
-public class UserRepository {
+public class UserRepository extends AbstractYamlRepository<User,UserRepository.UserWrapper>{
     // 외부에서 접근하는 싱글톤 메서드
     // 싱글톤 인스턴스
     @Getter
@@ -27,10 +27,10 @@ public class UserRepository {
     private final List<User> users = new ArrayList<>();
 
     // 사용자 데이터 파일 경로
-    private final String FILE_PATH = System.getProperty("user.dir") + File.separator + "data" + File.separator + "users.yaml";
+    private static final String FILE_PATH = System.getProperty("user.dir") + File.separator + "data" + File.separator + "users.yaml";
 
     // YAML 객체
-    private final Yaml yaml;
+    //private final Yaml yaml;
 
     // 사용자 데이터를 감싸는 래퍼 클래스 (YAML 구조 유지를 위함)
     public static class UserWrapper {
@@ -44,7 +44,7 @@ public class UserRepository {
 
     // 생성자: YAML 설정 및 파일 로딩
     private UserRepository() {
-        DumperOptions options = new DumperOptions();
+        /*DumperOptions options = new DumperOptions();
         options.setPrettyFlow(true);
         options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
 
@@ -58,9 +58,10 @@ public class UserRepository {
 
         yaml = new Yaml(representer, options);
 
-        loadAllFromFile();
+        loadAllFromFile();*/
+        super(FILE_PATH,UserWrapper.class);
     }
-
+/*
     // 모든 사용자 정보를 파일에 저장
     private void saveAllToFile() {
         File file = new File(FILE_PATH);
@@ -145,7 +146,7 @@ public class UserRepository {
             System.err.println("[UserRepository] 파일 로딩 중 오류 발생: " + e.getMessage());
             e.printStackTrace();
         }
-    }
+    }*/
 
     // 사용자 인증 (학번 + 비밀번호)
     public BasicResponse validate(String number, String pw) {
@@ -229,5 +230,68 @@ public class UserRepository {
             }
         }
         return new BasicResponse("404", "해당 학번의 사용자가 존재하지 않습니다.");
+    }
+    
+    
+    
+    // ====== 템플릿 부분 구현 ======
+
+    @Override
+    protected void setupClassTags(Representer representer) {
+        representer.addClassTag(UserWrapper.class, Tag.MAP);
+        representer.addClassTag(User.class, Tag.MAP);
+    }
+
+    @Override
+    protected void applyLoadedWrapper(UserWrapper wrapper) {
+        if (wrapper != null && wrapper.users != null) {
+            users.clear();
+            users.addAll(wrapper.users);
+        }
+    }
+
+    @Override
+    protected UserWrapper createWrapperForSave() {
+        UserWrapper wrapper = new UserWrapper();
+        wrapper.users = users;
+        return wrapper;
+    }
+
+    @Override
+    protected List<User> getEntityList() {
+        return users;
+    }
+
+    // 파일이 없으면 resources/data/users.yaml 을 복사
+    @Override
+    protected boolean handleFileNotExists(File file) {
+        try {
+            File parentDir = file.getParentFile();
+            if (!parentDir.exists()) {
+                parentDir.mkdirs();
+            }
+
+            try (InputStream resourceInput = getClass().getResourceAsStream("/data/users.yaml");
+                 OutputStream output = new FileOutputStream(file)) {
+
+                if (resourceInput == null) {
+                    System.err.println("[UserRepository] resources/data/users.yaml 리소스가 없습니다.");
+                    return false;
+                }
+
+                byte[] buffer = new byte[1024];
+                int bytesRead;
+                while ((bytesRead = resourceInput.read(buffer)) != -1) {
+                    output.write(buffer, 0, bytesRead);
+                }
+
+                System.out.println("[UserRepository] 리소스 파일 복사 완료");
+                return true;
+            }
+        } catch (IOException e) {
+            System.err.println("[UserRepository] 리소스 파일 복사 중 오류: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
     }
 }
