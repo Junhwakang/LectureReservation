@@ -1,2 +1,13 @@
-reservations: [
-  ]
+reservations:
+- buildingName: 정보관
+  date: '2025-11-23'
+  dayOfTheWeek: SUNDAY
+  description: ㅈㅈㅈ
+  endTime: '10:00'
+  floor: '9'
+  id: 5b3ee55b-8344-404a-9d67-0fbe923770ac
+  lectureRoom: '916'
+  number: '1234'
+  startTime: 09:00
+  status: 대기
+  title: ㅈㅈㅈ
