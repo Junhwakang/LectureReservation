@@ -24,10 +24,21 @@ public class ReservationService {
     private static final ReservationService instance = new ReservationService();
 
     private final ReservationValidator reservationValidator;
+    
+    // 마지막으로 생성된 예약 (옵저버 알림용)
+    private RoomReservation lastCreatedReservation;
+    
     private ReservationService() {
         this.reservationValidator = new ReservationValidator()
                 .addStrategy(new DuplicateReservationValidationStrategy()) // SFR-203 전략패턴 
                 .addStrategy(new WeeklyLimitReservationValidationStrategy());   // SFR-211 전략패턴
+    }
+    
+    /**
+     * 마지막으로 생성된 예약 반환 (옵저버 알림용)
+     */
+    public RoomReservation getLastCreatedReservation() {
+        return lastCreatedReservation;
     }
 
     // 사용자 관점 ========================================================================================================
@@ -96,6 +107,10 @@ public class ReservationService {
 
             // 최종 저장
             repo.save(roomReservation);
+            
+            // 마지막 생성 예약 저장 (옵저버 알림용)
+            this.lastCreatedReservation = roomReservation;
+            
             return new BasicResponse("200", "예약이 완료되었습니다.");
 
         } catch (Exception e) {

@@ -591,38 +591,88 @@ public class ReservationManagementSwingController {
         return result;
     }
 
-    // 예약 수락, 거절 팝업 인터페이스 기능
+    // 예약 수락, 거부, 삭제 팝업 인터페이스 기능 (SFR-403, SFR-405 적용)
     private void processReservationChoice(RoundReservationInformationButton btn) {
         int choice = JOptionPane.showOptionDialog(
                 view,
                 "이 예약을 어떻게 처리하시겠습니까?",
                 "예약 처리",
-                JOptionPane.YES_NO_OPTION,
+                JOptionPane.YES_NO_CANCEL_OPTION,
                 JOptionPane.QUESTION_MESSAGE,
                 null,
-                new String[]{"예약 수락", "예약 삭제"},
-                "예약 수락"
+                new String[]{"예약 승인", "예약 거부", "예약 삭제"},
+                "예약 승인"
         );
 
+        // 승인 처리 (SFR-403, SFR-404)
         if (choice == JOptionPane.YES_OPTION) {
-            BasicResponse response = roomReservationManagementClientController.changeRoomReservationStatus(btn.getRoomReservation().getId());
-            String code = response.code;
-            if (code.equals("200")) {
-                JOptionPane.showMessageDialog(view, "예약이 수락되었습니다.");
-            } else if (code.equals("409")) {
-                JOptionPane.showMessageDialog(view, "동일 시간대에 이미 예약이 존재합니다.", "예약 실패", JOptionPane.WARNING_MESSAGE);
-            } else {
-                JOptionPane.showMessageDialog(view, "처리에 실패했습니다.", "오류", JOptionPane.ERROR_MESSAGE);
-            }
-        } else if (choice == JOptionPane.NO_OPTION) {
-            BasicResponse response = roomReservationManagementClientController.deleteRoomReservation(btn.getRoomReservation().getId());
-            String code = response.code;
-            if (code.equals("200")) {
-                JOptionPane.showMessageDialog(view, "예약이 거절되어 삭제되었습니다.");
-            } else {
-                JOptionPane.showMessageDialog(view, "처리에 실패했습니다.", "오류", JOptionPane.ERROR_MESSAGE);
+            BasicResponse response = roomReservationManagementClientController.approveRoomReservation(btn.getRoomReservation().getId());
+            if (response != null) {
+                String code = response.code;
+                if (code.equals("200")) {
+                    JOptionPane.showMessageDialog(view, "예약이 승인되었습니다.");
+                } else if (code.equals("409")) {
+                    JOptionPane.showMessageDialog(view, "동일 시간대에 이미 예약이 존재합니다.", "예약 실패", JOptionPane.WARNING_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(view, "처리에 실패했습니다: " + response.data, "오류", JOptionPane.ERROR_MESSAGE);
+                }
             }
         }
+        // 거부 처리 (SFR-403, SFR-404)
+        else if (choice == JOptionPane.NO_OPTION) {
+            String rejectionReason = JOptionPane.showInputDialog(
+                    view,
+                    "거부 사유를 입력하세요:",
+                    "예약 거부",
+                    JOptionPane.PLAIN_MESSAGE
+            );
+
+            if (rejectionReason != null && !rejectionReason.trim().isEmpty()) {
+                BasicResponse response = roomReservationManagementClientController.rejectRoomReservation(
+                        btn.getRoomReservation().getId(),
+                        rejectionReason
+                );
+
+                if (response != null) {
+                    String code = response.code;
+                    if (code.equals("200")) {
+                        JOptionPane.showMessageDialog(view, "예약이 거부되었습니다.");
+                    } else {
+                        JOptionPane.showMessageDialog(view, "처리에 실패했습니다: " + response.data, "오류", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+            } else {
+                JOptionPane.showMessageDialog(view, "거부 사유를 입력해주세요.", "입력 오류", JOptionPane.WARNING_MESSAGE);
+            }
+        }
+        // 삭제 처리 (SFR-405, SFR-406)
+        else if (choice == JOptionPane.CANCEL_OPTION) {
+            String cancellationReason = JOptionPane.showInputDialog(
+                    view,
+                    "취소 사유를 입력하세요:",
+                    "예약 삭제",
+                    JOptionPane.PLAIN_MESSAGE
+            );
+
+            if (cancellationReason != null && !cancellationReason.trim().isEmpty()) {
+                BasicResponse response = roomReservationManagementClientController.deleteRoomReservation(
+                        btn.getRoomReservation().getId(),
+                        cancellationReason
+                );
+
+                if (response != null) {
+                    String code = response.code;
+                    if (code.equals("200")) {
+                        JOptionPane.showMessageDialog(view, "예약이 삭제되었습니다.");
+                    } else {
+                        JOptionPane.showMessageDialog(view, "처리에 실패했습니다: " + response.data, "오류", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+            } else {
+                JOptionPane.showMessageDialog(view, "취소 사유를 입력해주세요.", "입력 오류", JOptionPane.WARNING_MESSAGE);
+            }
+        }
+
         reservationListPanelRefresh(); // 대기 리스트 갱신
         updateCalendarWithDummyData(); // 캘린더 갱신
     }

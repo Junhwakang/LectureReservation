@@ -27,4 +27,10 @@ public class RoomReservation implements Serializable {
 
     private String startTime;
     private String endTime;
+    
+    // SFR-405, SFR-406: 취소 원인
+    private String cancellationReason;
+    
+    // SFR-403, SFR-404: 거부 원인
+    private String rejectionReason;
 }

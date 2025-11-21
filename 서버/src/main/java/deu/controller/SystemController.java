@@ -58,9 +58,28 @@ public class SystemController {
             else if (request instanceof ReservationManagementCommandRequest r) {
                 return switch (r.command) {
                     case "예약 수정" -> reservationManagementController.handleModifyRoomReservation((RoomReservationRequest) r.payload);
-                    case "예약 삭제" -> reservationManagementController.handleDeleteRoomReservation((String) r.payload);
+                    case "예약 삭제" -> {
+                        // payload가 String이면 취소 원인 없이, String[]이면 [id, reason]
+                        if (r.payload instanceof String id) {
+                            yield reservationManagementController.handleDeleteRoomReservation(id);
+                        } else if (r.payload instanceof String[] data && data.length == 2) {
+                            yield reservationManagementController.handleDeleteRoomReservation(data[0], data[1]);
+                        } else {
+                            yield new BasicResponse("400", "잘못된 삭제 요청 형식");
+                        }
+                    }
                     case "예약 대기 전체 조회" -> reservationManagementController.handleFindAllRoomReservation();
                     case "예약 상태 변경" -> reservationManagementController.handleChangeRoomReservationStatus((String) r.payload);
+                    case "예약 승인" -> reservationManagementController.handleApproveRoomReservation((String) r.payload);
+                    case "예약 거부" -> {
+                        if (r.payload instanceof String[] data && data.length == 2) {
+                            yield reservationManagementController.handleRejectRoomReservation(data[0], data[1]);
+                        } else {
+                            yield new BasicResponse("400", "잘못된 거부 요청 형식: [reservationId, reason] 필요");
+                        }
+                    }
+                    case "실행 취소" -> reservationManagementController.handleUndo();
+                    case "재실행" -> reservationManagementController.handleRedo();
                     default -> new BasicResponse("404", "알 수 없는 명령어");
                 };
             }

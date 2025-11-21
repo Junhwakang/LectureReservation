@@ -72,10 +72,10 @@ public class AuthSwingController {
 
     // 깃허브 이동 버튼 기능
     private void handleGithubServer(ActionEvent e){
-        openWebpage("https://github.com/oxxultus/lectureroom-reservation-server");
+        openWebpage("https://github.com/Junhwakang/LectureReservation/tree/main");
     }
     private void handleGithubClient(ActionEvent e){
-        openWebpage("https://github.com/oxxultus/lectureroom-reservation-app");
+        openWebpage("https://github.com/Junhwakang/LectureReservation/tree/main");
     }
 
     // 아이피 포트 설정
