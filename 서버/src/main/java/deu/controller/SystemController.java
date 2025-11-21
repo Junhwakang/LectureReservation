@@ -1,5 +1,7 @@
+// 경로: 서버/src/main/java/deu/controller/SystemController.java
 package deu.controller;
 
+import deu.command.UserCommand; // ⭐ deu.command.UserCommand 대신 Command 인터페이스 사용
 import deu.controller.business.*;
 import deu.model.dto.request.command.*;
 import deu.model.dto.request.data.lecture.LectureRequest;
@@ -11,14 +13,23 @@ import deu.model.dto.response.BasicResponse;
 
 public class SystemController {
     private final UserController userController = UserController.getInstance();
-    private final UserManagementController userManagementController = UserManagementController.getInstance();
+    // UserManagementInvoker는 Singleton으로 가져옴
+    private final UserManagementInvoker userManagementInvoker = UserManagementInvoker.getInstance(); 
     private final LectureController lectureController = LectureController.getInstance();
     private final ReservationController reservationController = ReservationController.getInstance();
     private final ReservationManagementController reservationManagementController = ReservationManagementController.getInstance();
 
     public Object handle(Object request) {
         try {
-            // 사용자 컨트롤러
+            // ⭐ 커맨드 패턴 적용: Command 인터페이스 확인
+            if (request instanceof UserCommand command) { // 기존 UserCommand/UserManagementCommandRequest 로직 대체
+                System.out.println("[SystemController] Command 타입 확인 완료");
+                System.out.println("[SystemController] 커맨드: " + command.getClass().getSimpleName());
+                // Invoker에게 전달 (더 이상 switch 문 없음!)
+                return userManagementInvoker.executeCommand(command);
+            }
+            
+            // 사용자 컨트롤러 (기존 방식 유지)
             if (request instanceof UserCommandRequest r) {
                 return switch (r.command) {
                     case "로그인" -> userController.handleLogin((LoginRequest) r.payload);
@@ -30,18 +41,9 @@ public class SystemController {
                 };
             }
 
-            // 사용자 관리 컨트롤러
-            else if (request instanceof UserManagementCommandRequest r) {
-                return switch (r.command) {
-                    case "사용자 수정" -> userManagementController.handleUpdateUser((UserDataModificationRequest) r.payload);
-                    case "사용자 삭제" -> userManagementController.handleDeleteUser((DeleteRequest) r.payload);
-                    case "사용자 조회" -> userManagementController.handleFindUser((FindRequest) r.payload);
-                    case "전체 사용자 조회" -> userManagementController.handleFindAllUsers();
-                    default -> new BasicResponse("404", "알 수 없는 명령어");
-                };
-            }
+            // ❌ 기존 UserManagementController 및 UserManagementCommandRequest 관련 로직은 Command 패턴으로 대체되어 이 위치에서 제거됩니다.
 
-            // 예약 컨트롤러
+            // 예약 컨트롤러 (기존 방식 유지)
             else if (request instanceof ReservationCommandRequest r) {
                 return switch (r.command) {
                     case "예약 요청" -> reservationController.handleAddRoomReservation((RoomReservationRequest) r.payload);
@@ -54,7 +56,7 @@ public class SystemController {
                 };
             }
 
-            // 예약 관리 컨트롤러
+            // 예약 관리 컨트롤러 (기존 방식 유지)
             else if (request instanceof ReservationManagementCommandRequest r) {
                 return switch (r.command) {
                     case "예약 수정" -> reservationManagementController.handleModifyRoomReservation((RoomReservationRequest) r.payload);
@@ -65,7 +67,7 @@ public class SystemController {
                 };
             }
 
-            // 강의 컨트롤러
+            // 강의 컨트롤러 (기존 방식 유지)
             else if (request instanceof LectureCommandRequest r) {
                 return switch (r.command) {
                     case "주간 강의 조회" -> lectureController.handleReturnLectureOfWeek((LectureRequest) r.payload);
@@ -75,7 +77,7 @@ public class SystemController {
 
             return new BasicResponse("405", "지원하지 않는 요청 타입");
         } catch (Exception e) {
-            e.printStackTrace(); // 로그 출력 (디버깅)
+            e.printStackTrace();
             return new BasicResponse("500", "서버 처리 중 예외 발생: " + e.getMessage());
         }
     }
