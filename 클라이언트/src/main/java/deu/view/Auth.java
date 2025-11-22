@@ -74,6 +74,8 @@ public class Auth extends javax.swing.JFrame {
         signup_signupPasswordField = new deu.view.custom.TextFieldRound();
         signup_signupNameField = new deu.view.custom.TextFieldRound();
         signup_signupMajorField = new deu.view.custom.TextFieldRound();
+        signup_roleComboBox = new deu.view.custom.ComboBoxRound<>();
+        signup_roleLabel = new javax.swing.JLabel();
         signup_signupPasswordLabel = new javax.swing.JLabel();
         signup_signupNameLabel = new javax.swing.JLabel();
         signup_signupMajorLabel = new javax.swing.JLabel();
@@ -352,7 +354,7 @@ public class Auth extends javax.swing.JFrame {
         signup_undoButton.setRoundTopLeft(0);
         signup_undoButton.setRoundTopRight(15);
         signup.add(signup_undoButton);
-        signup_undoButton.setBounds(830, 520, 90, 40);
+        signup_undoButton.setBounds(830, 590, 90, 40);
 
         signup_signupButton.setBackground(new java.awt.Color(20, 90, 170));
         signup_signupButton.setForeground(new java.awt.Color(255, 255, 255));
@@ -362,7 +364,7 @@ public class Auth extends javax.swing.JFrame {
         signup_signupButton.setRoundTopLeft(15);
         signup_signupButton.setRoundTopRight(0);
         signup.add(signup_signupButton);
-        signup_signupButton.setBounds(460, 520, 380, 40);
+        signup_signupButton.setBounds(460, 590, 380, 40);
 
         signup_signupPasswordField.setNormalTextColor(java.awt.Color.black);
         signup.add(signup_signupPasswordField);
@@ -375,6 +377,14 @@ public class Auth extends javax.swing.JFrame {
         signup_signupMajorField.setNormalTextColor(java.awt.Color.black);
         signup.add(signup_signupMajorField);
         signup_signupMajorField.setBounds(460, 460, 460, 40);
+
+        signup_roleComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "학생 (s)", "교수 (p)", "관리자 (m)" }));
+        signup_roleComboBox.setBackground(new java.awt.Color(255, 255, 255));
+        signup_roleComboBox.setFont(new java.awt.Font("Helvetica Neue", 0, 14));
+        signup_roleComboBox.setForeground(new java.awt.Color(0, 0, 0));
+        signup_roleComboBox.setRound(15);
+        signup.add(signup_roleComboBox);
+        signup_roleComboBox.setBounds(460, 530, 460, 40);
 
         signup_signupPasswordLabel.setBackground(new java.awt.Color(255, 255, 255));
         signup_signupPasswordLabel.setFont(new java.awt.Font("Helvetica Neue", 0, 14)); // NOI18N
@@ -396,6 +406,13 @@ public class Auth extends javax.swing.JFrame {
         signup_signupMajorLabel.setText("Major");
         signup.add(signup_signupMajorLabel);
         signup_signupMajorLabel.setBounds(460, 440, 380, 18);
+
+        signup_roleLabel.setBackground(new java.awt.Color(255, 255, 255));
+        signup_roleLabel.setFont(new java.awt.Font("Helvetica Neue", 0, 14)); // NOI18N
+        signup_roleLabel.setForeground(new java.awt.Color(153, 153, 153));
+        signup_roleLabel.setText("Role");
+        signup.add(signup_roleLabel);
+        signup_roleLabel.setBounds(460, 510, 380, 18);
 
         signup_loginNumberLabel.setBackground(new java.awt.Color(255, 255, 255));
         signup_loginNumberLabel.setFont(new java.awt.Font("Helvetica Neue", 0, 14)); // NOI18N
@@ -546,6 +563,7 @@ public class Auth extends javax.swing.JFrame {
         signup_signupPasswordField.setText("");
         signup_signupNameField.setText("");
         signup_signupMajorField.setText("");
+        signup_roleComboBox.setSelectedIndex(0);
     }
     public void transitionToHome(String userId, String userPw) {
         // Home 인스턴스가 null이면 새로 생성
@@ -595,11 +613,38 @@ public class Auth extends javax.swing.JFrame {
     public String getSignupMajor() {
         return signup_signupMajorField.getText().trim();
     }
+    public String getSignupRole() {
+        String selected = (String) signup_roleComboBox.getSelectedItem();
+        if (selected != null) {
+            if (selected.contains("학생") || selected.contains("s")) {
+                return "s";
+            } else if (selected.contains("교수") || selected.contains("p")) {
+                return "p";
+            } else if (selected.contains("관리자") || selected.contains("m")) {
+                return "m";
+            }
+        }
+        return "s"; // 기본값
+    }
     public String getLoginId() {
         return login_loginNumberField.getText().trim();
     }
     public String getLoginPassword() {
         return new String(login_loginPasswordField.getPassword()).trim();
+    }
+    
+    // 호스트/포트 필드 접근
+    public deu.view.custom.TextFieldRound getHostField() {
+        return hostField;
+    }
+    public deu.view.custom.TextFieldRound getPortField() {
+        return portField;
+    }
+    public String getHostField() {
+        return hostField.getText().trim();
+    }
+    public String getPortField() {
+        return portField.getText().trim();
     }
 
     // 메시지 출력
@@ -702,6 +747,8 @@ public class Auth extends javax.swing.JFrame {
     private deu.view.custom.TextFieldRound signup_signupNumberField;
     private deu.view.custom.TextFieldRound signup_signupPasswordField;
     private javax.swing.JLabel signup_signupPasswordLabel;
+    private deu.view.custom.ComboBoxRound<String> signup_roleComboBox;
+    private javax.swing.JLabel signup_roleLabel;
     private deu.view.custom.LabelRound signup_signupSideBarLabel;
     private javax.swing.JLabel signup_signupTitle;
     private deu.view.custom.ButtonRound signup_undoButton;

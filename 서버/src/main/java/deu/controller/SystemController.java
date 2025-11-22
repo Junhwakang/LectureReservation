@@ -13,6 +13,8 @@ import deu.model.dto.response.BasicResponse;
 
 public class SystemController {
     private final UserController userController = UserController.getInstance();
+    // ⭐ Singleton 패턴: AccountManagerController 인스턴스 사용
+    private final AccountManagerController accountManagerController = AccountManagerController.getInstance();
     // UserManagementInvoker는 Singleton으로 가져옴
     private final UserManagementInvoker userManagementInvoker = UserManagementInvoker.getInstance(); 
     private final LectureController lectureController = LectureController.getInstance();
@@ -37,6 +39,11 @@ public class SystemController {
                     case "로그아웃" -> userController.handleLogout((LogoutRequest) r.payload);
                     case "동시접속자" -> userController.handleCurrentUser();
                     case "사용자 이름 반환" -> userController.handleFindUserName((FindUserNameRequest) r.payload);
+                    // ⭐ Singleton 패턴: AccountManager 명령 처리
+                    case "AccountManager로그인" -> accountManagerController.handleLogin((LoginRequest) r.payload);
+                    case "AccountManager회원가입" -> accountManagerController.handleSignup((SignupRequest) r.payload);
+                    case "AccountManager로그아웃" -> accountManagerController.handleLogout((LogoutRequest) r.payload);
+                    case "AccountManager역할조회" -> accountManagerController.handleGetRole((String) r.payload);
                     default -> new BasicResponse("404", "알 수 없는 명령어");
                 };
             }

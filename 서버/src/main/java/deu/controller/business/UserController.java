@@ -67,4 +67,16 @@ public class UserController {
     public Object handleFindUserName(FindUserNameRequest payload) {
         return userService.findUserName(payload);
     }
+    
+    /**
+     * ⭐ Singleton 패턴: 외부에서 userNumbers에 사용자 추가 (AccountManager 로그인 시 사용)
+     * 
+     * @param number 사용자 번호
+     */
+    public synchronized void addUserNumber(String number) {
+        if (!userNumbers.contains(number)) {
+            userNumbers.add(number);
+            System.out.println("[UserController] ⭐ Singleton 인스턴스에 사용자 추가: " + number);
+        }
+    }
 }
