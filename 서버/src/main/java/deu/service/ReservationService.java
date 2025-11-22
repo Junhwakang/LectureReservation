@@ -6,9 +6,17 @@ import deu.model.dto.request.data.reservation.RoomReservationRequest;
 import deu.model.entity.RoomReservation;
 import deu.repository.ReservationRepository;
 import deu.model.dto.response.BasicResponse;
+import deu.model.enums.ReservationPurpose;
+import deu.observer.LoggingObserver;
+import deu.observer.NotificationObserver;
+import deu.observer.ReservationSubject;
+import deu.service.reservation.validation.AdvanceValidationStrategy;
+import deu.service.reservation.validation.CapacityLimitStrategy;
 import lombok.Getter;
 import deu.service.reservation.validation.ReservationValidator;
 import deu.service.reservation.validation.DuplicateReservationValidationStrategy;
+import deu.service.reservation.validation.ProfFirstStrategy;
+import deu.service.reservation.validation.PurposeMaxValidationStrategy;
 import deu.service.reservation.validation.WeeklyLimitReservationValidationStrategy;
 import deu.service.reservation.validation.ReservationValidationException;
 
@@ -16,7 +24,6 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.UUID;
 
 public class ReservationService {
 
@@ -25,16 +32,25 @@ public class ReservationService {
     private static final ReservationService instance = new ReservationService();
 
     private final ReservationValidator reservationValidator;
-    
+
     // 마지막으로 생성된 예약 (옵저버 알림용)
     private RoomReservation lastCreatedReservation;
-    
+
     private ReservationService() {
         this.reservationValidator = new ReservationValidator()
                 .addStrategy(new DuplicateReservationValidationStrategy()) // SFR-203 전략패턴 
-                .addStrategy(new WeeklyLimitReservationValidationStrategy());   // SFR-211 전략패턴
+                .addStrategy(new WeeklyLimitReservationValidationStrategy())
+                .addStrategy(new PurposeMaxValidationStrategy()) // SFR-212 검증 전략패턴
+                .addStrategy(new AdvanceValidationStrategy()) // SFR-214 검증 전략
+                .addStrategy(new ProfFirstStrategy()) // SFR-216 검증
+                .addStrategy(new CapacityLimitStrategy());
+
+        // 옵저버 등록
+        ReservationSubject subject = ReservationSubject.getInstance();
+        subject.attach(new LoggingObserver());
+        subject.attach(new NotificationObserver());
     }
-    
+
     /**
      * 마지막으로 생성된 예약 반환 (옵저버 알림용)
      */
@@ -59,71 +75,31 @@ public class ReservationService {
             roomReservation.setStartTime(payload.getStartTime());
             roomReservation.setEndTime(payload.getEndTime());
 
+            //SFR-211, 213, 215,217 목적, 인원수, 수용인원
+            roomReservation.setPurpose(payload.getPurpose());
+            roomReservation.setParticipantCount(payload.getParticipantCount());
+            roomReservation.setCapacity(payload.getCapacity());
+
             //Repo 조회
             ReservationRepository repo = ReservationRepository.getInstance();
             List<RoomReservation> userReservations = repo.findByUser(payload.getNumber());
 
-            //WeeklyLimit,,,  클래스에서 담당.
-            // SFR-211에 해당
+            boolean professor = isProfessor(payload.getNumber());
 
-            // 일단 냅두고 나중에 지울 예정
-            /*
-            // 날짜 필터: 오늘부터 7일간
-            //LocalDate today = LocalDate.now();
-            //LocalDate maxDate = today.plusDays(6);
-
-            
-
-            // 예약 수 제한
-            long countWithin7Days = userReservations.stream()
-                    .filter(r -> {
-                        try {
-                            LocalDate date = LocalDate.parse(r.getDate());
-                            return !date.isBefore(today) && !date.isAfter(maxDate);
-                        } catch (Exception e) {
-                            return false; // 날짜 파싱 실패한 항목은 무시
-                        }
-                    })
-                    .count();
-
-            if (countWithin7Days >= 5) {
-                return new BasicResponse("403", "오늘부터 7일 간 최대 5개의 예약만 가능합니다.");
-            }*/
-            // SFR-203, 211: Strategy 기반 중복 예약 검증
-            reservationValidator.validate(payload, repo, userReservations);
-
-            /*/* Duplicate... 클래스에서 담당 SFR-203에 해당
-            // 동일 시간 사용자 중복 예약 체크
-            
-            
-            // 일단 냅두고 나중에 지울 예정
-            for (RoomReservation r : userReservations) {
-            if (r.getDate().equals(payload.getDate()) &&
-            r.getStartTime().equals(payload.getStartTime())) {
-            return new BasicResponse("409", "같은 시간대에 이미 예약이 존재합니다.");
+            if (!professor) {
+                // SFR-203 Strategy 기반 중복 예약 검증
+                reservationValidator.validate(payload, repo, userReservations);
+            } else {
+                // === 교수: SFR-210 – 같은 시간대 기존 예약들 자동 취소 ===
+                cancelConflictsForProfessor(roomReservation, repo);
+                // 교수는 강의/보강이 우선이기 때문에 중복 검사로 막지 않는다
             }
-            }
-            
-            /*
-            // 강의실 동일 시간 중복 체크
-            boolean isDup = repo.isDuplicate(
-            roomReservation.getDate(),
-            roomReservation.getStartTime(),
-            roomReservation.getLectureRoom()
-            );
-            
-            if (isDup) {
-            return new BasicResponse("409", "해당 시간에 다른 예약이 존재합니다.");
-            }
-            */
- 
- 
             // 최종 저장
             repo.save(roomReservation);
-            
+
             // 마지막 생성 예약 저장 (옵저버 알림용)
             this.lastCreatedReservation = roomReservation;
-            
+
             return new BasicResponse("200", "예약이 완료되었습니다.");
 
         } catch (ReservationValidationException e) {
@@ -203,7 +179,7 @@ public class ReservationService {
     }
 
     // 통합 관점 ==========================================================================================================
-    // 예약 수정
+    // 예약 수정        // 기존 코드이며 SFR-209
     public BasicResponse modifyRoomReservation(RoomReservationRequest payload) {
         try {
             ReservationRepository repo = ReservationRepository.getInstance();
@@ -213,7 +189,7 @@ public class ReservationService {
                 return new BasicResponse("404", "예약을 찾을 수 없습니다.");
             }
 
-            // 필드 업데이트
+            // 필드 업데이트    // SFR-209 기능
             original.setBuildingName(payload.getBuildingName());
             original.setFloor(payload.getFloor());
             original.setLectureRoom(payload.getLectureRoom());
@@ -223,6 +199,11 @@ public class ReservationService {
             original.setDayOfTheWeek(payload.getDayOfTheWeek());
             original.setStartTime(payload.getStartTime());
             original.setEndTime(payload.getEndTime());
+
+            //SFR-211, 213, 215,217 목적, 인원수, 수용인원 
+            original.setPurpose(payload.getPurpose());  // 목적
+            original.setParticipantCount(payload.getParticipantCount());    //인원 수
+            original.setCapacity(payload.getCapacity());    // 수용 인원
 
             // 파일 저장
             repo.saveToFile();
@@ -298,6 +279,71 @@ public class ReservationService {
 
         return new BasicResponse("200", result);
     }
-
     // =================================================================================================================
+
+    // 교수 우선순위로 취소 메서드
+    private boolean isProfessor(String number) {
+        if (number == null || number.isEmpty()) {
+            return false;
+        }
+        char c = number.charAt(0);
+        return c == 'p' || c == 'P';
+    }
+
+    // SFR-210 교수가 예약할 경우 동일 시간대 취소 가능 메서드
+    // SFR-218 보강/세미나로 인한 예약으로 취소 될 경우 취소 사실 알림.
+    private void cancelConflictsForProfessor(RoomReservation newReservation,
+            ReservationRepository repo) {
+
+        String date = newReservation.getDate();
+        String building = newReservation.getBuildingName();
+        String floor = newReservation.getFloor();
+        String room = newReservation.getLectureRoom();
+        String startTime = newReservation.getStartTime();
+
+        // 같은 날짜 + 같은 강의실 + 같은 시작시간 예약들 찾기
+        List<RoomReservation> conflicts = repo.findAll().stream()
+                .filter(r -> date.equals(r.getDate()))
+                .filter(r -> building.equals(r.getBuildingName()))
+                .filter(r -> floor.equals(r.getFloor()))
+                .filter(r -> room.equals(r.getLectureRoom()))
+                .filter(r -> startTime.equals(r.getStartTime()))
+                .toList();
+
+        ReservationPurpose purpose = null;
+        try {
+            if (newReservation.getPurpose() != null) {
+                purpose = ReservationPurpose.fromLabel(newReservation.getPurpose());
+            }
+        } catch (IllegalArgumentException ignored) {
+            // label이 enum과 안 맞으면 그냥 null
+        }
+
+        
+        // 보강 or 세미나인지 확인
+        boolean isSupplyOrSeminar = 
+                purpose == ReservationPurpose.SUPPLEMENT ||
+                purpose == ReservationPurpose.SEMINAR;
+        
+        String reasonForCancel;
+        if(isSupplyOrSeminar){
+            //SFR-218 : 보강 / 세미나로 인한 알림 전송
+            reasonForCancel = "보강 및 세미나의 이유로 기존 예약이 취소되었습니다.";
+        }else{
+            // 일반적인 이유
+            reasonForCancel = "교수 예약으로 자동 취소 되었습니다.";
+        }
+        
+        ReservationSubject subject = ReservationSubject.getInstance();
+        
+        for (RoomReservation conflict : conflicts) {
+            // 상태를 취소로 바꾸고, 취소 사유 남기기
+            conflict.setStatus("취소");
+            conflict.setCancellationReason(reasonForCancel);
+            subject.notifyReservationCancelled(conflict, reasonForCancel);
+        }
+
+        // 변경사항 파일에 반영
+        repo.saveToFile();
+    }
 }

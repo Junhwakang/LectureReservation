@@ -28,30 +28,9 @@ public class ReservationRepository extends AbstractYamlRepository<RoomReservatio
     }
 
     private ReservationRepository() {
-        /*DumperOptions options = new DumperOptions();
-        options.setPrettyFlow(true);
-        options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
-
-        Representer representer = new Representer(options);
-        representer.getPropertyUtils().setSkipMissingProperties(true);
-        representer.addClassTag(RoomReservationWrapper.class, Tag.MAP);
-        representer.addClassTag(RoomReservation.class, Tag.MAP);
-
-        this.yaml = new Yaml(representer, options);
-
-        createDataDirectoryIfNeeded();
-        loadFromFile();*/
         super(FILE_PATH,RoomReservationWrapper.class);  // 추상클래스 생성자 호출
+        loadFromFile();
     }
-    /*
-    // 디렉토리 생성
-    private void createDataDirectoryIfNeeded() {
-        File file = new File(FILE_PATH);
-        File parentDir = file.getParentFile();
-        if (!parentDir.exists()) {
-            parentDir.mkdirs();
-        }
-    }*/
 
     // 예약 저장
     public void save(RoomReservation reservation) {
@@ -107,38 +86,6 @@ public class ReservationRepository extends AbstractYamlRepository<RoomReservatio
         }
         return false;
     }
-
-    /*
-    // 전체 저장
-    public void saveToFile() {
-        createDataDirectoryIfNeeded();
-
-        try (Writer writer = new FileWriter(FILE_PATH)) {
-            RoomReservationWrapper wrapper = new RoomReservationWrapper();
-            wrapper.reservations = roomReservationList;
-            yaml.dump(wrapper, writer);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }*/
-
-
-    /*
-    // 초기 로딩
-    private void loadFromFile() {
-        File file = new File(FILE_PATH);
-        if (!file.exists()) return;
-
-        try (InputStream input = new FileInputStream(file)) {
-            RoomReservationWrapper wrapper = yaml.loadAs(input, RoomReservationWrapper.class);
-            if (wrapper != null && wrapper.reservations != null) {
-                roomReservationList.clear();
-                roomReservationList.addAll(wrapper.reservations);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }*/
 
     // 테스트용: 전체 예약 삭제
     public void clear() {

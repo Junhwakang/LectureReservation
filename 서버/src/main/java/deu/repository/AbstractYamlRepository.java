@@ -37,7 +37,7 @@ public abstract class AbstractYamlRepository<T, W> {
         this.yaml = new Yaml(representer, options);
 
         createDataDirectoryIfNeeded();
-        loadFromFile();
+        //loadFromFile();
     }
 
     // ----- 템플릿 공통 흐름 -----

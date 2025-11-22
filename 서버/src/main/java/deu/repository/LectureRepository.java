@@ -19,6 +19,9 @@ import java.util.Optional;
  */
 public class LectureRepository extends AbstractYamlRepository<Lecture, LectureRepository.LectureWrapper> {
     // 외부에서 접근하는 싱글톤 인스턴스
+
+    // YAML 파일 경로 (JAR 또는 IDE 실행 경로 기준)
+    private static final String FILE_PATH = System.getProperty("user.dir") + File.separator + "data" + File.separator + "lectures.yaml";
     // Singleton instance
     @Getter
     private static final LectureRepository instance = new LectureRepository();
@@ -26,8 +29,7 @@ public class LectureRepository extends AbstractYamlRepository<Lecture, LectureRe
     // 강의 리스트
     private final List<Lecture> lectureList = new ArrayList<>();
 
-    // YAML 파일 경로 (JAR 또는 IDE 실행 경로 기준)
-    private static final String FILE_PATH = System.getProperty("user.dir") + File.separator + "data" + File.separator + "lectures.yaml";
+    
 
     // SnakeYAML 객체
     //private final Yaml yaml;
@@ -58,6 +60,7 @@ public class LectureRepository extends AbstractYamlRepository<Lecture, LectureRe
         loadAllFromFile();
         */
         super(FILE_PATH,LectureWrapper.class);
+        loadFromFile();
     }
     /*
     // 파일 저장

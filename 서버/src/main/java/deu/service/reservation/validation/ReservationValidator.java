@@ -14,7 +14,6 @@ import java.util.List;
  * @author User
  */
 
-//여러 전략을 묶기 SFR-211 도 addStrategy() 체이닝으로 추가
 public class ReservationValidator {
     private final List<ReservationValidationStrategy> strategies = new ArrayList<>();
     

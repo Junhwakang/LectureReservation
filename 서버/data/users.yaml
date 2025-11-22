@@ -1,9 +1,0 @@
-users:
-- major: 전체 학과
-  name: 시스템 관리자
-  number: m-admin
-  password: admin
-- major: 컴공
-  name: 이지민
-  number: '1234'
-  password: '1234'

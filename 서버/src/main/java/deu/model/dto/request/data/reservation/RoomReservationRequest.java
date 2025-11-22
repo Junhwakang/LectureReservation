@@ -22,10 +22,17 @@ public class RoomReservationRequest implements Serializable {
     private String endTime;
     private String number;
     private String status = "대기"; // 기본값 지정
+    // SFR-211 : 예약 목적
+    private String purpose;     // 보강, 세미나, 개인학습, 조별학습
+    private int participantCount;   // 참석 인원 SFR-213,215
+    
+    //SFR-217 : 수용 인원
+    private int capacity;
 
     public RoomReservationRequest(String buildingName, String floor, String lectureRoom,
                                   String title, String description, String date, String dayOfTheWeek,
-                                  String startTime, String endTime, String number) {
+                                  String startTime, String endTime, String number, String purpose,
+                                  int participantCount, int capacity) {
         this.buildingName = buildingName;
         this.floor = floor;
         this.lectureRoom = lectureRoom;
@@ -37,5 +44,8 @@ public class RoomReservationRequest implements Serializable {
         this.endTime = endTime;
         this.number = number;
         this.status = "대기";
+        this.purpose = purpose;
+        this.participantCount = participantCount;
+        this.capacity = capacity;
     }
 }

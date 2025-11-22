@@ -19,15 +19,15 @@ import java.util.List;
  */
 public class UserRepository extends AbstractYamlRepository<User,UserRepository.UserWrapper>{
     // 외부에서 접근하는 싱글톤 메서드
+    // 사용자 데이터 파일 경로
+    private static final String FILE_PATH = System.getProperty("user.dir") + File.separator + "data" + File.separator + "users.yaml";
+    
     // 싱글톤 인스턴스
     @Getter
     private static final UserRepository instance = new UserRepository();
 
     // 메모리 내 사용자 리스트
     private final List<User> users = new ArrayList<>();
-
-    // 사용자 데이터 파일 경로
-    private static final String FILE_PATH = System.getProperty("user.dir") + File.separator + "data" + File.separator + "users.yaml";
 
     // YAML 객체
     //private final Yaml yaml;
@@ -60,6 +60,7 @@ public class UserRepository extends AbstractYamlRepository<User,UserRepository.U
 
         loadAllFromFile();*/
         super(FILE_PATH,UserWrapper.class);
+        loadFromFile();
     }
 /*
     // 모든 사용자 정보를 파일에 저장
