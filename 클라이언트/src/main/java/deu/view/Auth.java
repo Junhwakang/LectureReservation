@@ -15,7 +15,7 @@ import java.awt.event.ActionListener;
 
 /**
  *
- * @author oxxultus
+ * 
  */
 @Getter
 @Setter
@@ -74,6 +74,8 @@ public class Auth extends javax.swing.JFrame {
         signup_signupPasswordField = new deu.view.custom.TextFieldRound();
         signup_signupNameField = new deu.view.custom.TextFieldRound();
         signup_signupMajorField = new deu.view.custom.TextFieldRound();
+        signup_roleComboBox = new deu.view.custom.ComboBoxRound<>();
+        signup_roleLabel = new javax.swing.JLabel();
         signup_signupPasswordLabel = new javax.swing.JLabel();
         signup_signupNameLabel = new javax.swing.JLabel();
         signup_signupMajorLabel = new javax.swing.JLabel();
@@ -108,15 +110,11 @@ public class Auth extends javax.swing.JFrame {
         login.setSize(new java.awt.Dimension(1100, 600));
         login.setLayout(null);
 
-        login_loginNumberField.setBackground(new java.awt.Color(255, 255, 255));
-        login_loginNumberField.setCaretColor(new java.awt.Color(0, 0, 0));
         login_loginNumberField.setNormalTextColor(java.awt.Color.black);
         login_loginNumberField.setSelectedTextColor(new java.awt.Color(0, 0, 0));
         login.add(login_loginNumberField);
         login_loginNumberField.setBounds(460, 290, 460, 40);
 
-        login_loginPasswordField.setBackground(new java.awt.Color(255, 255, 255));
-        login_loginPasswordField.setCaretColor(new java.awt.Color(0, 0, 0));
         login_loginPasswordField.setNormalTextColor(java.awt.Color.black);
         login_loginPasswordField.setRound(15);
         login_loginPasswordField.setSelectedTextColor(new java.awt.Color(0, 0, 0));
@@ -249,7 +247,7 @@ public class Auth extends javax.swing.JFrame {
         login_name4.setFont(new java.awt.Font("Helvetica Neue", 0, 16)); // NOI18N
         login_name4.setForeground(new java.awt.Color(102, 102, 102));
         login_name4.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        login_name4.setText("<html>강준화 20212998<br>김영진 20213000<br>김원형 20212973<br>이시연 20223046<br>이건일 20233928</html>");
+        login_name4.setText("<html>강준화 20212998<br>심동진 20212991<br>이나겸 20223125<br>임민욱 20213034</html>");
         teamPanel.add(login_name4);
         login_name4.setBounds(0, 40, 250, 150);
 
@@ -272,7 +270,6 @@ public class Auth extends javax.swing.JFrame {
         teamPanel2.add(login_name2);
         login_name2.setBounds(0, 30, 250, 40);
 
-        adminAccountLabel.setForeground(new java.awt.Color(0, 0, 0));
         adminAccountLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         adminAccountLabel.setText("관리자 계정");
         teamPanel2.add(adminAccountLabel);
@@ -297,7 +294,6 @@ public class Auth extends javax.swing.JFrame {
         configPanel.add(ipLabel);
         ipLabel.setBounds(13, 10, 220, 20);
 
-        portField.setBackground(new java.awt.Color(255, 255, 255));
         portField.setForeground(new java.awt.Color(0, 0, 0));
         portField.setHorizontalAlignment(javax.swing.JTextField.CENTER);
         portField.setRound(10);
@@ -305,7 +301,6 @@ public class Auth extends javax.swing.JFrame {
         configPanel.add(portField);
         portField.setBounds(10, 80, 230, 27);
 
-        hostField.setBackground(new java.awt.Color(255, 255, 255));
         hostField.setForeground(new java.awt.Color(0, 0, 0));
         hostField.setHorizontalAlignment(javax.swing.JTextField.CENTER);
         hostField.setRound(10);
@@ -348,20 +343,18 @@ public class Auth extends javax.swing.JFrame {
         signup.setSize(new java.awt.Dimension(1100, 600));
         signup.setLayout(null);
 
-        signup_signupNumberField.setBackground(new java.awt.Color(255, 255, 255));
         signup_signupNumberField.setNormalTextColor(java.awt.Color.black);
         signup.add(signup_signupNumberField);
         signup_signupNumberField.setBounds(460, 250, 460, 40);
 
         signup_undoButton.setBackground(new java.awt.Color(204, 204, 204));
-        signup_undoButton.setForeground(new java.awt.Color(0, 0, 0));
         signup_undoButton.setText("취소");
         signup_undoButton.setRoundBottomLeft(0);
         signup_undoButton.setRoundBottomRight(15);
         signup_undoButton.setRoundTopLeft(0);
         signup_undoButton.setRoundTopRight(15);
         signup.add(signup_undoButton);
-        signup_undoButton.setBounds(830, 520, 90, 40);
+        signup_undoButton.setBounds(830, 590, 90, 40);
 
         signup_signupButton.setBackground(new java.awt.Color(20, 90, 170));
         signup_signupButton.setForeground(new java.awt.Color(255, 255, 255));
@@ -371,22 +364,27 @@ public class Auth extends javax.swing.JFrame {
         signup_signupButton.setRoundTopLeft(15);
         signup_signupButton.setRoundTopRight(0);
         signup.add(signup_signupButton);
-        signup_signupButton.setBounds(460, 520, 380, 40);
+        signup_signupButton.setBounds(460, 590, 380, 40);
 
-        signup_signupPasswordField.setBackground(new java.awt.Color(255, 255, 255));
         signup_signupPasswordField.setNormalTextColor(java.awt.Color.black);
         signup.add(signup_signupPasswordField);
         signup_signupPasswordField.setBounds(460, 320, 460, 40);
 
-        signup_signupNameField.setBackground(new java.awt.Color(255, 255, 255));
         signup_signupNameField.setNormalTextColor(java.awt.Color.black);
         signup.add(signup_signupNameField);
         signup_signupNameField.setBounds(460, 390, 460, 40);
 
-        signup_signupMajorField.setBackground(new java.awt.Color(255, 255, 255));
         signup_signupMajorField.setNormalTextColor(java.awt.Color.black);
         signup.add(signup_signupMajorField);
         signup_signupMajorField.setBounds(460, 460, 460, 40);
+
+        signup_roleComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "학생 (s)", "교수 (p)", "관리자 (m)" }));
+        signup_roleComboBox.setBackground(new java.awt.Color(255, 255, 255));
+        signup_roleComboBox.setFont(new java.awt.Font("Helvetica Neue", 0, 14));
+        signup_roleComboBox.setForeground(new java.awt.Color(0, 0, 0));
+        signup_roleComboBox.setRound(15);
+        signup.add(signup_roleComboBox);
+        signup_roleComboBox.setBounds(460, 530, 460, 40);
 
         signup_signupPasswordLabel.setBackground(new java.awt.Color(255, 255, 255));
         signup_signupPasswordLabel.setFont(new java.awt.Font("Helvetica Neue", 0, 14)); // NOI18N
@@ -409,6 +407,13 @@ public class Auth extends javax.swing.JFrame {
         signup.add(signup_signupMajorLabel);
         signup_signupMajorLabel.setBounds(460, 440, 380, 18);
 
+        signup_roleLabel.setBackground(new java.awt.Color(255, 255, 255));
+        signup_roleLabel.setFont(new java.awt.Font("Helvetica Neue", 0, 14)); // NOI18N
+        signup_roleLabel.setForeground(new java.awt.Color(153, 153, 153));
+        signup_roleLabel.setText("Role");
+        signup.add(signup_roleLabel);
+        signup_roleLabel.setBounds(460, 510, 380, 18);
+
         signup_loginNumberLabel.setBackground(new java.awt.Color(255, 255, 255));
         signup_loginNumberLabel.setFont(new java.awt.Font("Helvetica Neue", 0, 14)); // NOI18N
         signup_loginNumberLabel.setForeground(new java.awt.Color(153, 153, 153));
@@ -418,7 +423,6 @@ public class Auth extends javax.swing.JFrame {
 
         signup_signupTitle.setBackground(new java.awt.Color(0, 0, 0));
         signup_signupTitle.setFont(new java.awt.Font("Helvetica", 1, 24)); // NOI18N
-        signup_signupTitle.setForeground(new java.awt.Color(0, 0, 0));
         signup_signupTitle.setText("Signup");
         signup.add(signup_signupTitle);
         signup_signupTitle.setBounds(640, 160, 83, 40);
@@ -438,7 +442,6 @@ public class Auth extends javax.swing.JFrame {
 
         signup_deuProjectTitle.setBackground(new java.awt.Color(204, 204, 204));
         signup_deuProjectTitle.setFont(new java.awt.Font("Helvetica Neue", 0, 18)); // NOI18N
-        signup_deuProjectTitle.setForeground(new java.awt.Color(0, 0, 0));
         signup_deuProjectTitle.setText("DEU Project");
         signup.add(signup_deuProjectTitle);
         signup_deuProjectTitle.setBounds(70, 35, 160, 20);
@@ -560,6 +563,7 @@ public class Auth extends javax.swing.JFrame {
         signup_signupPasswordField.setText("");
         signup_signupNameField.setText("");
         signup_signupMajorField.setText("");
+        signup_roleComboBox.setSelectedIndex(0);
     }
     public void transitionToHome(String userId, String userPw) {
         // Home 인스턴스가 null이면 새로 생성
@@ -609,11 +613,38 @@ public class Auth extends javax.swing.JFrame {
     public String getSignupMajor() {
         return signup_signupMajorField.getText().trim();
     }
+    public String getSignupRole() {
+        String selected = (String) signup_roleComboBox.getSelectedItem();
+        if (selected != null) {
+            if (selected.contains("학생") || selected.contains("s")) {
+                return "s";
+            } else if (selected.contains("교수") || selected.contains("p")) {
+                return "p";
+            } else if (selected.contains("관리자") || selected.contains("m")) {
+                return "m";
+            }
+        }
+        return "s"; // 기본값
+    }
     public String getLoginId() {
         return login_loginNumberField.getText().trim();
     }
     public String getLoginPassword() {
         return new String(login_loginPasswordField.getPassword()).trim();
+    }
+    
+    // 호스트/포트 필드 접근
+    public deu.view.custom.TextFieldRound getHostField() {
+        return hostField;
+    }
+    public deu.view.custom.TextFieldRound getPortField() {
+        return portField;
+    }
+    public String getHostField() {
+        return hostField.getText().trim();
+    }
+    public String getPortField() {
+        return portField.getText().trim();
     }
 
     // 메시지 출력
@@ -716,6 +747,8 @@ public class Auth extends javax.swing.JFrame {
     private deu.view.custom.TextFieldRound signup_signupNumberField;
     private deu.view.custom.TextFieldRound signup_signupPasswordField;
     private javax.swing.JLabel signup_signupPasswordLabel;
+    private deu.view.custom.ComboBoxRound<String> signup_roleComboBox;
+    private javax.swing.JLabel signup_roleLabel;
     private deu.view.custom.LabelRound signup_signupSideBarLabel;
     private javax.swing.JLabel signup_signupTitle;
     private deu.view.custom.ButtonRound signup_undoButton;

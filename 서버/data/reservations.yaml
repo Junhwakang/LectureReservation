@@ -1,13 +1,13 @@
 reservations:
 - buildingName: 정보관
-  date: '2025-05-23'
-  dayOfTheWeek: FRIDAY
-  description: 시험 준비 스터디
-  endTime: '14:00'
+  date: '2025-11-23'
+  dayOfTheWeek: SUNDAY
+  description: ㅈㅈㅈ
+  endTime: '10:00'
   floor: '9'
-  id: afe5b46b-2639-4152-8402-f2adc5e57051
-  lectureRoom: '901'
-  number: S123
-  startTime: '13:00'
+  id: 5b3ee55b-8344-404a-9d67-0fbe923770ac
+  lectureRoom: '916'
+  number: '1234'
+  startTime: 09:00
   status: 대기
-  title: 스터디 모임
+  title: ㅈㅈㅈ

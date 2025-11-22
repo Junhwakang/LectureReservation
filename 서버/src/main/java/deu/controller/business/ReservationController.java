@@ -5,6 +5,7 @@ import deu.model.dto.request.data.reservation.RoomReservationLocationRequest;
 import deu.model.dto.request.data.reservation.RoomReservationRequest;
 import deu.model.dto.response.BasicResponse;
 import deu.model.entity.RoomReservation;
+import deu.observer.ReservationSubject;
 import deu.service.ReservationService;
 import lombok.Getter;
 
@@ -16,10 +17,19 @@ public class ReservationController {
     private ReservationController() {}
 
     private final ReservationService reservationService = ReservationService.getInstance();
+    private final ReservationSubject subject = ReservationSubject.getInstance();
 
     // 예약 신청
     public BasicResponse handleAddRoomReservation(RoomReservationRequest payload) {
-        return reservationService.createRoomReservation(payload);
+        BasicResponse response = reservationService.createRoomReservation(payload);
+        
+        // 예약 성공 시 관리자에게 알림
+        if ("200".equals(response.code)) {
+            // 방금 생성된 예약 조회해서 알림 전송
+            subject.notifyReservationCreated(reservationService.getLastCreatedReservation());
+        }
+        
+        return response;
     }
 
     // 개인별 예약 삭제 TODO: String number, String id를 감싸는 DTO 추가 해야됨, number 와 id에 해당하는 예약의 number가 동일하면삭제
