@@ -7,7 +7,7 @@ reservations:
   description: 시험 준비 스터디
   endTime: '14:00'
   floor: '9'
-  id: 855a3420-567f-4ff1-a044-6a5a116afcd6
+  id: 9a3d744d-4c79-4bd9-9cf2-a810322f8bc1
   lectureRoom: '901'
   number: S123
   participantCount: 0
@@ -16,3 +16,20 @@ reservations:
   startTime: '13:00'
   status: 대기
   title: 스터디 모임
+- buildingName: 정보관
+  cancellationReason: null
+  capacity: 0
+  date: '2025-11-26'
+  dayOfTheWeek: WEDNESDAY
+  description: 세미나
+  endTime: '18:00'
+  floor: '9'
+  id: b33907bf-5369-40e6-bbf0-5a54d56801d6
+  lectureRoom: '916'
+  number: s123
+  participantCount: 0
+  purpose: null
+  rejectionReason: null
+  startTime: '17:00'
+  status: 대기
+  title: 세미나

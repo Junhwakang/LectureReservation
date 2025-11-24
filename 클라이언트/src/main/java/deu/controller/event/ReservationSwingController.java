@@ -434,7 +434,7 @@ public class ReservationSwingController {
         // DTO 생성
         RoomReservationRequest reservationRequest = new RoomReservationRequest(
                 building, floor, lectureRoom, title, description,
-                reservationDate, dayOfWeekStr, startTime, endTime, userNumber
+                reservationDate, dayOfWeekStr, startTime, endTime, userNumber,null,0
         );
         System.out.println(title + " | " +description);
 

@@ -4,6 +4,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 public class ServerMain {
+
     public static void main(String[] args) {
         try (ServerSocket serverSocket = new ServerSocket(9999)) {
             System.out.println("================================================================================");
@@ -19,5 +20,6 @@ public class ServerMain {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        
     }
 }

@@ -43,7 +43,6 @@ public class HomeSwingController {
     }
 
     // 개인 별 주간 예약 시간표를 확인하는 기능 =================================================================================
-
     // 로그인 사용자 예약 정보를 캘린더에 갱신 하는 기능 TODO: 예약기능 확인완료 + SwingWorker
     private void refreshUserReservationCalendar() {
         view.getCalendar().setVisible(false);
@@ -51,18 +50,23 @@ public class HomeSwingController {
 
         // 1. 더미 예약 정보 객체 생성 (7일 x 13교시)
         BasicResponse response = roomReservationClientController.weekRoomReservationByUserNumber(view.getUserNumber());
-        if(!response.code.equals("200")){
-            JOptionPane.showMessageDialog(null, "개인 전체 예약 내역을 불러오지 못했습니다.");
-        }else{
-            data = (RoomReservation[][]) response.data;  // createDummyReservationGrid();
+
+        if (response == null || !"200".equals(response.code) || response.data == null) {
+            JOptionPane.showMessageDialog(null,
+                    "개인 전체 예약 내역을 불러오지 못했습니다.\n"
+                    + (response != null ? String.valueOf(response.data) : "서버 응답 없음"),
+                    "예약 불러오기 오류",
+                    JOptionPane.WARNING_MESSAGE);
+            return; // 캘린더 업데이트 중단
         }
+
+        data = (RoomReservation[][]) response.data;
 
         // 2. 시간 텍스트 더미 데이터 생성
         String[][] generateTimeSlots = generateTimeSlots();
 
         // 3. 캘린더 버튼 처리
         updateCalendarButtons(data, generateTimeSlots);
-
 
         view.getCalendar().setVisible(true);
     }
@@ -114,9 +118,9 @@ public class HomeSwingController {
 
                     // 선택된 버튼 강조
                     TimeSlotButton selected = (TimeSlotButton) view.getSelectedCalendarButton();
-                    if (selected != null &&
-                            selected.getRoomReservation() != null &&
-                            selected.getRoomReservation().getId().equals(roomReservation.getId())) {
+                    if (selected != null
+                            && selected.getRoomReservation() != null
+                            && selected.getRoomReservation().getId().equals(roomReservation.getId())) {
                         btn.setBackground(new Color(0, 120, 215, 180)); // 파란색 강조
                     } else {
                         btn.setBackground(baseColor); // 상태별 색상
@@ -233,7 +237,6 @@ public class HomeSwingController {
     }
 
     // =================================================================================================================
-
     // 예약을 삭제하는 기능 TODO: 예약기능 확인완료 + SwingWorker
     private void deleteReservation(ActionEvent e) {
         String buildingName = view.getBuildingField().getText();
@@ -257,7 +260,6 @@ public class HomeSwingController {
         }
 
         // 버튼 잠금 또는 UI 비활성화 처리 필요 시 여기서 추가 가능
-
         SwingWorker<BasicResponse, Void> worker = new SwingWorker<>() {
             @Override
             protected BasicResponse doInBackground() {
@@ -330,7 +332,9 @@ public class HomeSwingController {
 
                 try {
                     java.util.List<RoomReservation> reservations = get();
-                    if (reservations == null) return;
+                    if (reservations == null) {
+                        return;
+                    }
 
                     myReservationList.removeAll();
 
@@ -419,7 +423,6 @@ public class HomeSwingController {
     }
 
     // 수정 안해도 되는 부분 ===========================================================================================
-
     // 내 예약 리스트가 생성될 때 갱신되는 기능 - 수정 금지
     private AncestorListener createMyReservationListInitListener() {
         return new AncestorListener() {
@@ -427,13 +430,17 @@ public class HomeSwingController {
             public void ancestorAdded(AncestorEvent event) {
                 refreshMyReservationList();
             }
-            @Override
-            public void ancestorRemoved(AncestorEvent event) {}
 
             @Override
-            public void ancestorMoved(AncestorEvent event) {}
+            public void ancestorRemoved(AncestorEvent event) {
+            }
+
+            @Override
+            public void ancestorMoved(AncestorEvent event) {
+            }
         };
     }
+
     // 캘린더가 생성 될 때 갱신 되는 기능 - 수정 금지
     private AncestorListener createUserReservationCalendarInitListener() {
         return new AncestorListener() {
@@ -443,12 +450,15 @@ public class HomeSwingController {
             }
 
             @Override
-            public void ancestorRemoved(AncestorEvent event) {}
+            public void ancestorRemoved(AncestorEvent event) {
+            }
 
             @Override
-            public void ancestorMoved(AncestorEvent event) {}
+            public void ancestorMoved(AncestorEvent event) {
+            }
         };
     }
+
     // 프로필이 생성 될 때 갱신 되는 기능 - 수정 금지
     private AncestorListener createUserProfileInitListener() {
         return new AncestorListener() {
@@ -458,12 +468,15 @@ public class HomeSwingController {
             }
 
             @Override
-            public void ancestorRemoved(AncestorEvent event) {}
+            public void ancestorRemoved(AncestorEvent event) {
+            }
 
             @Override
-            public void ancestorMoved(AncestorEvent event) {}
+            public void ancestorMoved(AncestorEvent event) {
+            }
         };
     }
+
     // 도움말 버튼 기능 - 수정 금지
     private void handleSupport(ActionEvent e) {
         String message = """
@@ -480,6 +493,7 @@ public class HomeSwingController {
 
         JOptionPane.showMessageDialog(view, message, "도움말", JOptionPane.INFORMATION_MESSAGE);
     }
+
     // 로그아웃 버튼 기능 - 수정 금지
     private void handleLogout(ActionEvent e) {
         Auth frame = (Auth) SwingUtilities.getWindowAncestor(view);
@@ -512,6 +526,7 @@ public class HomeSwingController {
             JOptionPane.showMessageDialog(view, result.data, "로그아웃 실패", JOptionPane.WARNING_MESSAGE);
         }
     }
+
     // 예약 메뉴 전환 - 수정 금지
     private void showReservationPanel(ActionEvent e) {
         Home.getInstance().closeFloatingFrames();
@@ -521,6 +536,7 @@ public class HomeSwingController {
     }
     // 기본 메뉴 전환 - 수정 금지
     private boolean hasAlreadyRefreshed = false;
+
     private void showMainPanel(ActionEvent e) {
         Home.getInstance().closeFloatingFrames();
         checkManagementAuthority();
@@ -531,6 +547,7 @@ public class HomeSwingController {
             hasAlreadyRefreshed = true;
         }
     }
+
     // 관리자 전용 메뉴 전환 - 수정 금지
     private void showManagerMenu(ActionEvent e) {
         Home.getInstance().closeFloatingFrames();
@@ -540,6 +557,7 @@ public class HomeSwingController {
 
         view.replaceMainContent(view.getManagerMenuPanel(), panel);
     }
+
     // 사용자 관리 메뉴 전환 - 수정 금지
     private void showUserManagerManagement(ActionEvent e) {
         Home.getInstance().closeFloatingFrames();
@@ -549,6 +567,7 @@ public class HomeSwingController {
 
         view.replaceMainContent(view.getManagerMenuPanel(), panel);
     }
+
     // 예악 관리 메뉴 전환 - 수정 금지
     private void showReservationManagement(ActionEvent e) {
         Home.getInstance().closeFloatingFrames();
@@ -558,11 +577,13 @@ public class HomeSwingController {
 
         view.replaceMainContent(view.getManagerMenuPanel(), panel);
     }
+
     // 일반 사용자 전용 매뉴 전환 - 수정 금지
     private void showCommonMenu(ActionEvent e) {
         Home.getInstance().closeFloatingFrames();
         view.replaceMainContent(view.getMenuPanel(), view.getMainPanel());
     }
+
     // 관리자 패널 허용 여부 기눙 - 수정 금지
     private void checkManagementAuthority() {
         view.getUserNumber()
@@ -571,6 +592,7 @@ public class HomeSwingController {
                 .findFirst()
                 .ifPresent(ch -> view.getManegementMenu().setVisible(ch == 'M'));
     }
+
     // 교시 연산 메서드 - 수정 금지
     private int timeToPeriod(String startTime) {
         try {
@@ -580,8 +602,9 @@ public class HomeSwingController {
             return -1; // 오류 발생 시 -1 반환
         }
     }
+
     // 예약 후 필드값 비우는 메서드  - 수정 금지
-    private void resetReservationTextField(){
+    private void resetReservationTextField() {
         view.getBuildingField().setText("");
         view.getLectureRoomField().setText("");
         view.getTitleField().setText("");

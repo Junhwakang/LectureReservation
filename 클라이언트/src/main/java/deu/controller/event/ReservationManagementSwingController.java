@@ -394,7 +394,9 @@ public class ReservationManagementSwingController {
                             dayOfWeekStr,
                             startTime,
                             endTime,
-                            ""
+                            "",
+                            null,
+                            0
                     );
                     roomReservationRequest.setId(reservationId);
 

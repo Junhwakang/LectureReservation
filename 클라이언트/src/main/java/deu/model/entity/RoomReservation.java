@@ -11,6 +11,7 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 public class RoomReservation implements Serializable {
+    private static final long serialVersionUID = 1L;
     private String id = UUID.randomUUID().toString(); // 예약 생성 시 UUID 자동 할당
     private String buildingName;
     private String floor;
