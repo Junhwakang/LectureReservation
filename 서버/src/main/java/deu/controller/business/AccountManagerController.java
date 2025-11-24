@@ -4,88 +4,55 @@ import deu.model.dto.request.data.user.LoginRequest;
 import deu.model.dto.request.data.user.LogoutRequest;
 import deu.model.dto.request.data.user.SignupRequest;
 import deu.model.dto.response.BasicResponse;
-import deu.service.AccountManager;
+import deu.service.UserService;
 
 /**
  * ⭐⭐⭐ Singleton 패턴 구현 - AccountManagerController ⭐⭐⭐
- * 
- * 이 컨트롤러는 Singleton 패턴을 사용하여 구현되었습니다.
- * 
- * Singleton 패턴 적용:
- * - Eager Initialization 방식 사용
- * - private static final instance로 클래스 로딩 시 인스턴스 생성
- * - private 생성자로 외부에서 직접 인스턴스 생성 방지
- * 
- * AccountManager와의 관계:
- * - AccountManager.getInstance()를 통해 Singleton 인스턴스 사용
- * - 여러 컨트롤러에서 동일한 AccountManager 인스턴스를 공유
- * 
- * @author AccountManager Team
- * @version 1.0
+ * YAML 파일(users.yaml)을 사용하도록 수정됨
  */
 public class AccountManagerController {
     
-    // ⭐ Singleton 패턴: Eager Initialization 방식
-    // 클래스가 로딩될 때 즉시 인스턴스 생성
     private static final AccountManagerController instance = new AccountManagerController();
+    private final UserService userService = UserService.getInstance(); // AccountManager 대신 UserService 사용
+    private final UserController userController = UserController.getInstance();
     
-    // ⭐ Singleton 패턴: AccountManager의 Singleton 인스턴스 사용
-    private final AccountManager accountManager = AccountManager.getInstance();
-    
-    private final UserController userController = UserController.getInstance(); // 로그아웃을 위해 필요
-    
-    /**
-     * ⭐ Singleton 패턴: private 생성자
-     * 외부에서 new AccountManagerController()로 인스턴스를 생성할 수 없도록 함
-     */
     private AccountManagerController() {
-        System.out.println("[AccountManagerController] ⭐ Singleton 인스턴스 생성 완료");
+        System.out.println("[AccountManagerController] ⭐ Singleton 인스턴스 생성 완료 (YAML 사용)");
     }
     
-    /**
-     * ⭐ Singleton 패턴: getInstance() 메서드
-     * 
-     * Eager Initialization 방식:
-     * - 클래스 로딩 시 인스턴스가 이미 생성되어 있음
-     * - 멀티스레드 환경에서도 안전 (JVM이 클래스 로딩을 동기화)
-     * 
-     * @return AccountManagerController의 유일한 인스턴스
-     */
     public static AccountManagerController getInstance() {
         return instance;
     }
     
     /**
-     * ⭐ Singleton 패턴을 사용한 로그인 처리
-     * AccountManager의 Singleton 인스턴스를 통해 로그인 처리
-     * 
-     * @param payload 로그인 요청 데이터
-     * @return BasicResponse 응답
+     * YAML 기반 로그인 처리
      */
     public Object handleLogin(LoginRequest payload) {
-        BasicResponse response = accountManager.login(payload);
+        BasicResponse response = userService.login(payload);
         
         // 로그인 성공 시 UserController의 userNumbers에 추가
         if (response.code.equals("200")) {
             userController.addUserNumber(payload.number);
-            System.out.println("[AccountManagerController] ⭐ Singleton 인스턴스를 통한 로그인 성공 - userNumbers에 추가: " + payload.number);
+            System.out.println("[AccountManagerController] ⭐ YAML 기반 로그인 성공 - userNumbers에 추가: " + payload.number);
         }
         
         return response;
     }
     
     /**
-     * ⭐ Singleton 패턴을 사용한 회원가입 처리
-     * AccountManager의 Singleton 인스턴스를 통해 회원가입 처리
-     * 
-     * @param payload 회원가입 요청 데이터
-     * @return BasicResponse 응답
+     * YAML 기반 회원가입 처리
      */
     public Object handleSignup(SignupRequest payload) {
-        System.out.println("[AccountManagerController] handleSignup 호출됨: number=" + payload.number + ", name=" + payload.name);
+        System.out.println("[AccountManagerController] YAML 기반 회원가입 호출: number=" + payload.number + ", name=" + payload.name);
         try {
-            BasicResponse response = accountManager.signup(payload);
-            System.out.println("[AccountManagerController] 회원가입 처리 완료: code=" + response.code + ", data=" + response.data);
+            // ID 규칙 검증 (s: 학생, p: 교수, m: 관리자)
+            String firstChar = payload.number.toLowerCase().substring(0, 1);
+            if (!firstChar.equals("s") && !firstChar.equals("p") && !firstChar.equals("m")) {
+                return new BasicResponse("400", "ID는 s(학생), p(교수), m(관리자)로 시작해야 합니다.");
+            }
+            
+            BasicResponse response = userService.signup(payload);
+            System.out.println("[AccountManagerController] YAML 기반 회원가입 처리 완료: code=" + response.code + ", data=" + response.data);
             return response;
         } catch (Exception e) {
             System.err.println("[AccountManagerController] 회원가입 처리 중 예외 발생: " + e.getMessage());
@@ -95,31 +62,36 @@ public class AccountManagerController {
     }
     
     /**
-     * 사용자 역할 조회
-     * AccountManager의 Singleton 인스턴스를 통해 역할 조회
-     * 
-     * @param number 사용자 번호
-     * @return BasicResponse 응답
+     * 사용자 역할 조회 (ID 첫 글자 기반)
      */
     public Object handleGetRole(String number) {
-        String role = accountManager.getUserRole(number);
-        if (role != null) {
-            return new BasicResponse("200", role);
-        } else {
-            return new BasicResponse("404", "사용자를 찾을 수 없습니다.");
+        if (number == null || number.isEmpty()) {
+            return new BasicResponse("400", "사용자 번호가 없습니다.");
         }
+        
+        String firstChar = number.toLowerCase().substring(0, 1);
+        String role;
+        switch (firstChar) {
+            case "s":
+                role = "Student";
+                break;
+            case "p":
+                role = "Professor";
+                break;
+            case "m":
+                role = "Admin";
+                break;
+            default:
+                return new BasicResponse("400", "잘못된 사용자 번호 형식입니다.");
+        }
+        
+        return new BasicResponse("200", role);
     }
     
     /**
-     * AccountManager를 사용한 로그아웃 처리
-     * UserController의 로그아웃을 사용하여 처리
-     * 
-     * @param payload 로그아웃 요청 데이터
-     * @return BasicResponse 응답
+     * 로그아웃 처리
      */
     public Object handleLogout(LogoutRequest payload) {
-        // UserController의 로그아웃을 사용 (userNumbers에서 제거)
         return userController.handleLogout(payload);
     }
 }
-
