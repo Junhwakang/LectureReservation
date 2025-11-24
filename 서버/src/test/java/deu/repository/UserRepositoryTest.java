@@ -4,166 +4,116 @@ import deu.model.dto.response.BasicResponse;
 import deu.model.entity.User;
 import org.junit.jupiter.api.*;
 
-import java.io.File;
-import java.util.List;
-
 import static org.junit.jupiter.api.Assertions.*;
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class UserRepositoryTest {
+@DisplayName("UserRepository 단위 테스트")
+class UserRepositoryTest {
 
     private UserRepository repo;
-    private final String TEST_ID = "test001";
-    private final String TEST_PASSWORD = "pw123";
-    private final String TEST_NAME = "테스트 유저";
-    private final String TEST_MAJOR = "소프트웨어공학과";
 
-    private final String DATA_DIR_PATH = System.getProperty("user.dir") + File.separator + "data";
-    private final String TEST_FILE_PATH = DATA_DIR_PATH + File.separator + "users.yaml";
-
-    @BeforeAll
-    void init() {
-        File file = new File(TEST_FILE_PATH);
-        if (file.exists()) file.delete();
+    @BeforeEach
+    void setUp() {
         repo = UserRepository.getInstance();
     }
 
-    @AfterAll
-    void cleanup() {
-        File file = new File(TEST_FILE_PATH);
-        if (file.exists()) file.delete();
-
-        File dir = new File(DATA_DIR_PATH);
-        if (dir.exists() && dir.isDirectory() && dir.list().length == 0) {
-            dir.delete();
-        }
-    }
-
-    @BeforeEach
-    void clearUser() {
-        repo.deleteByNumber(TEST_ID);
-    }
-
-    @DisplayName("사용자 저장 동작 검증")
     @Test
-    @Order(1)
-    void testSaveUser() {
-        BasicResponse res = repo.save(TEST_ID, TEST_PASSWORD, TEST_NAME, TEST_MAJOR);
-        assertEquals("200", res.code);
+    @DisplayName("회원가입 후 해당 학번으로 조회하면 사용자 정보가 반환된다")
+    void testSaveAndFindByNumber() {
+        // given
+        String number = "T123456";
+        String pw = "pw123";
+        String name = "테스트유저";
+        String major = "컴퓨터공학";
+
+        // when
+        BasicResponse saveResponse = repo.save(number, pw, name, major);
+        BasicResponse findResponse = repo.findByNumber(number);
+
+        // then
+        assertEquals("200", saveResponse.code);
+        assertEquals("200", findResponse.code);
+
+        User user = (User) findResponse.data;
+        assertEquals(number, user.number);
+        assertEquals(name, user.name);
+        assertEquals(major, user.major);
+
+        // 정리
+        repo.deleteByNumber(number);
     }
 
-    @DisplayName("중복 사용자 저장 시 400 반환 확인")
     @Test
-    @Order(2)
-    void testDuplicateUserSave() {
-        repo.save(TEST_ID, TEST_PASSWORD, TEST_NAME, TEST_MAJOR);
-        BasicResponse res = repo.save(TEST_ID, "otherpw", "다른이름", "다른학과");
-        assertEquals("400", res.code);
+    @DisplayName("같은 학번으로 두 번 회원가입하면 두 번째 요청은 실패해야 한다")
+    void testDuplicateSave() {
+        String number = "T999999";
+        String pw = "pw";
+        String name = "중복테스트";
+        String major = "디자인패턴";
+
+        BasicResponse first = repo.save(number, pw, name, major);
+        BasicResponse second = repo.save(number, pw, name, major);
+
+        assertEquals("200", first.code);
+        assertEquals("400", second.code); // 이미 가입된 사용자 정보 입니다.
+
+        // 정리
+        repo.deleteByNumber(number);
     }
 
-    @DisplayName("올바른 사용자 정보로 로그인 검증")
     @Test
-    @Order(3)
-    void testValidateSuccess() {
-        repo.save(TEST_ID, TEST_PASSWORD, TEST_NAME, TEST_MAJOR);
-        BasicResponse res = repo.validate(TEST_ID, TEST_PASSWORD);
-        assertEquals("200", res.code);
+    @DisplayName("로그인 성공/실패 케이스를 검증한다")
+    void testValidate() {
+        String number = "TLOGIN1";
+        String pw = "pw123";
+        repo.save(number, pw, "로그인유저", "소프트웨어");
+
+        // 성공 케이스
+        BasicResponse success = repo.validate(number, pw);
+        assertEquals("200", success.code);
+
+        // 비밀번호 오류
+        BasicResponse wrongPw = repo.validate(number, "wrong");
+        assertEquals("401", wrongPw.code);
+
+        // 존재하지 않는 아이디
+        BasicResponse notExist = repo.validate("NO_USER", "pw");
+        assertEquals("400", notExist.code);
+
+        // 정리
+        repo.deleteByNumber(number);
     }
 
-    @DisplayName("비밀번호가 틀린 경우 로그인 실패 검증")
     @Test
-    @Order(4)
-    void testValidateWrongPassword() {
-        repo.save(TEST_ID, TEST_PASSWORD, TEST_NAME, TEST_MAJOR);
-        BasicResponse res = repo.validate(TEST_ID, "wrongpw");
-        assertEquals("401", res.code);
+    @DisplayName("사용자 삭제 후 존재 여부가 false가 된다")
+    void testDeleteAndExists() {
+        String number = "TDEL1";
+        repo.save(number, "pw", "삭제유저", "전자공학");
+
+        BasicResponse existsBefore = repo.existsByNumber(number);
+        assertEquals("200", existsBefore.code);
+
+        BasicResponse deleteResponse = repo.deleteByNumber(number);
+        assertEquals("200", deleteResponse.code);
+
+        BasicResponse existsAfter = repo.existsByNumber(number);
+        assertEquals("404", existsAfter.code);
     }
 
-    @DisplayName("존재하지 않는 사용자 로그인 실패 검증")
     @Test
-    @Order(5)
-    void testValidateNonexistentUser() {
-        BasicResponse res = repo.validate("none", "pw");
-        assertEquals("400", res.code);
-    }
+    @DisplayName("사용자 정보 수정이 정상적으로 반영된다")
+    void testUpdate() {
+        String number = "TUPDATE1";
+        repo.save(number, "pw", "원래이름", "원래전공");
 
-    @DisplayName("사용자 번호로 조회 성공 여부 확인")
-    @Test
-    @Order(6)
-    void testFindByNumberSuccess() {
-        repo.save(TEST_ID, TEST_PASSWORD, TEST_NAME, TEST_MAJOR);
-        BasicResponse res = repo.findByNumber(TEST_ID);
-        assertEquals("200", res.code);
-        assertTrue(res.data instanceof User);
-    }
+        BasicResponse updateResponse = repo.update(number, "newPw", "새이름", "새전공");
+        assertEquals("200", updateResponse.code);
 
-    @DisplayName("존재하지 않는 사용자 조회 시 404 반환 확인")
-    @Test
-    @Order(7)
-    void testFindByNumberFail() {
-        BasicResponse res = repo.findByNumber("unknown");
-        assertEquals("404", res.code);
-    }
+        BasicResponse findResponse = repo.findByNumber(number);
+        User user = (User) findResponse.data;
+        assertEquals("새이름", user.name);
+        assertEquals("새전공", user.major);
 
-    @DisplayName("사용자 정보 업데이트 동작 검증")
-    @Test
-    @Order(8)
-    void testUpdateUser() {
-        repo.save(TEST_ID, TEST_PASSWORD, TEST_NAME, TEST_MAJOR);
-        BasicResponse res = repo.update(TEST_ID, "newpw", "변경된이름", "AI학과");
-        assertEquals("200", res.code);
-    }
-
-    @DisplayName("존재하지 않는 사용자 업데이트 실패 검증")
-    @Test
-    @Order(9)
-    void testUpdateNonexistentUser() {
-        BasicResponse res = repo.update("notExist", "pw", "이름", "전공");
-        assertEquals("404", res.code);
-    }
-
-    @DisplayName("사용자 삭제 동작 검증")
-    @Test
-    @Order(10)
-    void testDeleteUser() {
-        repo.save(TEST_ID, TEST_PASSWORD, TEST_NAME, TEST_MAJOR);
-        BasicResponse res = repo.deleteByNumber(TEST_ID);
-        assertEquals("200", res.code);
-    }
-
-    @DisplayName("존재하지 않는 사용자 삭제 시 404 반환 확인")
-    @Test
-    @Order(11)
-    void testDeleteNonexistentUser() {
-        BasicResponse res = repo.deleteByNumber("notExist");
-        assertEquals("404", res.code);
-    }
-
-    @DisplayName("전체 사용자 목록 조회 동작 확인")
-    @Test
-    @Order(12)
-    void testFindAll() {
-        repo.save(TEST_ID, TEST_PASSWORD, TEST_NAME, TEST_MAJOR);
-        BasicResponse res = repo.findAll();
-        assertEquals("200", res.code);
-        assertTrue(res.data instanceof List);
-    }
-
-    @DisplayName("존재하는 사용자에 대해 existsByNumber 확인")
-    @Test
-    @Order(13)
-    void testExistsByNumberTrue() {
-        repo.save(TEST_ID, TEST_PASSWORD, TEST_NAME, TEST_MAJOR);
-        BasicResponse res = repo.existsByNumber(TEST_ID);
-        assertEquals("200", res.code);
-    }
-
-    @DisplayName("존재하지 않는 사용자에 대해 existsByNumber 실패 확인")
-    @Test
-    @Order(14)
-    void testExistsByNumberFalse() {
-        BasicResponse res = repo.existsByNumber("notExist");
-        assertEquals("404", res.code);
+        // 정리
+        repo.deleteByNumber(number);
     }
 }

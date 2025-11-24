@@ -33,7 +33,9 @@ class LectureRepositoryTest {
     @Order(1)
     void test1_saveLecture_createsFile() {
         Lecture lecture = createDummyLecture(TEST_ID_1);
+
         String result = repo.save(lecture);
+
         assertEquals("200", result, "강의 저장 성공 코드 반환 확인");
         assertTrue(file.exists(), "파일이 생성되어 있어야 합니다.");
     }
@@ -43,7 +45,9 @@ class LectureRepositoryTest {
     @Order(2)
     void test2_findLectureById_returnsCorrectData() {
         repo.save(createDummyLecture(TEST_ID_1));
+
         Optional<Lecture> result = repo.findById(TEST_ID_1);
+
         assertTrue(result.isPresent());
         assertEquals("단위 테스트 강의", result.get().getTitle());
         assertEquals("김교수", result.get().getProfessor());
@@ -54,7 +58,9 @@ class LectureRepositoryTest {
     @Order(3)
     void test3_existsById_returns200() {
         repo.save(createDummyLecture(TEST_ID_1));
+
         String result = repo.existsById(TEST_ID_1);
+
         assertEquals("200", result);
     }
 
@@ -63,7 +69,9 @@ class LectureRepositoryTest {
     @Order(4)
     void test4_findAll_containsLecture() {
         repo.save(createDummyLecture(TEST_ID_1));
+
         List<Lecture> all = repo.findAll();
+
         assertTrue(all.stream().anyMatch(l -> l.getId().equals(TEST_ID_1)));
     }
 
@@ -72,7 +80,9 @@ class LectureRepositoryTest {
     @Order(5)
     void test5_deleteById_removesLecture() {
         repo.save(createDummyLecture(TEST_ID_1));
+
         String result = repo.deleteById(TEST_ID_1);
+
         assertEquals("200", result, "삭제 성공 코드 반환 확인");
         assertFalse(repo.findById(TEST_ID_1).isPresent(), "삭제 후 해당 ID는 존재하지 않아야 함");
     }

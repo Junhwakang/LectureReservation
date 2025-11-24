@@ -29,8 +29,6 @@ public class LectureRepository extends AbstractYamlRepository<Lecture, LectureRe
     // 강의 리스트
     private final List<Lecture> lectureList = new ArrayList<>();
 
-    
-
     // SnakeYAML 객체
     //private final Yaml yaml;
 
@@ -45,104 +43,9 @@ public class LectureRepository extends AbstractYamlRepository<Lecture, LectureRe
 
     // 생성자: YAML 설정 및 파일 로딩
     private LectureRepository() {
-        /*DumperOptions options = new DumperOptions();
-        options.setPrettyFlow(true);
-        options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
-
-        // SnakeYAML 2.x 대응: 클래스 태그 제거용 Representer
-        Representer representer = new Representer(options);
-        representer.getPropertyUtils().setSkipMissingProperties(true);
-        representer.addClassTag(LectureWrapper.class, Tag.MAP);
-        representer.addClassTag(Lecture.class, Tag.MAP);
-
-        yaml = new Yaml(representer, options);
-
-        loadAllFromFile();
-        */
         super(FILE_PATH,LectureWrapper.class);
         loadFromFile();
     }
-    /*
-    // 파일 저장
-    private void saveAllToFile() {
-        File file = new File(FILE_PATH);
-        File parentDir = file.getParentFile();
-
-        if (!parentDir.exists()) {
-            boolean dirCreated = parentDir.mkdirs();
-            if (dirCreated) {
-                System.out.println("[LectureRepository] 디렉토리 생성됨: " + parentDir.getAbsolutePath());
-            } else {
-                System.err.println("[LectureRepository] 디렉토리 생성 실패: " + parentDir.getAbsolutePath());
-            }
-        }
-
-        try (Writer writer = new FileWriter(file)) {
-            LectureWrapper wrapper = new LectureWrapper();
-            wrapper.lectures = lectureList;
-            yaml.dump(wrapper, writer);
-            System.out.println("[LectureRepository] 파일 저장 완료: " + file.getAbsolutePath());
-        } catch (IOException e) {
-            System.err.println("[LectureRepository] 파일 저장 중 오류 발생: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-
-    // 파일에서 불러오기
-    private void loadAllFromFile() {
-        File file = new File(FILE_PATH);
-
-        if (!file.exists()) {
-            System.out.println("[LectureRepository] 파일이 없어 리소스에서 복사합니다: " + file.getAbsolutePath());
-
-            File parentDir = file.getParentFile();
-            if (!parentDir.exists()) {
-                boolean dirCreated = parentDir.mkdirs();
-                if (dirCreated) {
-                    System.out.println("[LectureRepository] 디렉토리 생성됨: " + parentDir.getAbsolutePath());
-                } else {
-                    System.err.println("[LectureRepository] 디렉토리 생성 실패: " + parentDir.getAbsolutePath());
-                }
-            }
-
-            try (InputStream resourceInput = getClass().getResourceAsStream("/data/lectures.yaml");
-                 OutputStream output = new FileOutputStream(file)) {
-
-                if (resourceInput == null) {
-                    System.err.println("[LectureRepository] resources/data/lectures.yaml 리소스가 없습니다.");
-                    return;
-                }
-
-                byte[] buffer = new byte[1024];
-                int bytesRead;
-                while ((bytesRead = resourceInput.read(buffer)) != -1) {
-                    output.write(buffer, 0, bytesRead);
-                }
-
-                System.out.println("[LectureRepository] 리소스 파일 복사 완료");
-
-            } catch (IOException e) {
-                System.err.println("[LectureRepository] 리소스 파일 복사 중 오류: " + e.getMessage());
-                e.printStackTrace();
-                return;
-            }
-        }
-
-        try (InputStream input = new FileInputStream(file)) {
-            LectureWrapper wrapper = yaml.loadAs(input, LectureWrapper.class);
-            if (wrapper != null && wrapper.lectures != null) {
-                lectureList.clear();
-                lectureList.addAll(wrapper.lectures);
-                System.out.println("[LectureRepository] 파일 로딩 완료: " + file.getAbsolutePath());
-                System.out.println("[LectureRepository] 불러온 강의 수: " + lectureList.size());
-            } else {
-                System.out.println("[LectureRepository] 파일은 있으나 강의 데이터가 비어있습니다.");
-            }
-        } catch (IOException e) {
-            System.err.println("[LectureRepository] 파일 로딩 중 오류 발생: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }*/
 
     // 강의 저장 (수정 포함)
     public String save(Lecture lecture) {
