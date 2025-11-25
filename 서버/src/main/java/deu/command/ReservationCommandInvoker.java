@@ -14,7 +14,7 @@ public class ReservationCommandInvoker {
     private static final ReservationCommandInvoker instance = new ReservationCommandInvoker();
 
     public static ReservationCommandInvoker getInstance() {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        return instance;
     }
     
     private final Stack<ReservationCommand> executedCommands = new Stack<>();
