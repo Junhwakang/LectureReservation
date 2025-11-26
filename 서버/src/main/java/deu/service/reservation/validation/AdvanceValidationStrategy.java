@@ -19,7 +19,8 @@ import java.util.List;
 /**
  * SFR-214 서버는 개인/조별 학습 목적 예약이 최소 하루 전에 신청되었는지 검증해야 한다.
  */
-public class AdvanceValidationStrategy implements ReservationValidationBehavior {
+public class AdvanceValidationStrategy 
+        implements ReservationValidationBehavior {
 
     private static final DateTimeFormatter FORMATTER
             = DateTimeFormatter.ofPattern("yyyy-MM-dd");

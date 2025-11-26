@@ -14,7 +14,8 @@ import java.util.List;
  *
  * @author User
  */
-public class CapacityLimitStrategy implements ReservationValidationBehavior {
+public class CapacityLimitStrategy 
+        implements ReservationValidationBehavior {
     public void validate(RoomReservationRequest payload,
                          ReservationRepository repo,
                          List<RoomReservation> userReservations)
@@ -33,7 +34,8 @@ public class CapacityLimitStrategy implements ReservationValidationBehavior {
         // 예: 수용인원 40 → 최대 20명까지 허용
         if (count > capacity * 0.5) {
             throw new ReservationValidationException(
-                    "예약 인원(" + count + "명)이 강의실 수용 인원(" + capacity + "명)의 50%를 초과할 수 없습니다");
+                    "예약 인원(" + count + "명)이 강의실 수용 인원(" + capacity + "명"
+                            + ")의 50%를 초과할 수 없습니다");
         }
     }
 }

@@ -20,5 +20,6 @@ public interface ReservationValidationBehavior {
 
     void validate(RoomReservationRequest request,
             ReservationRepository repo,
-            List<RoomReservation> userReservations) throws ReservationValidationException;
+            List<RoomReservation> userReservations) 
+            throws ReservationValidationException;
 }

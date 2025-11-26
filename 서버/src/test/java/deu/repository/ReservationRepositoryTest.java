@@ -106,7 +106,7 @@ class ReservationRepositoryTest {
         RoomReservation res = createSampleReservation("S777", "2025-06-10", "13:00", "777");
         repository.save(res); // 내부에서 saveAllToFile 호출
 
-        System.out.println("📄 실제 저장 경로: " + file.getAbsolutePath());
+        System.out.println("실제 저장 경로: " + file.getAbsolutePath());
         assertTrue(file.exists(), "reservations.yaml 파일이 생성되어 있어야 합니다.");
     }
 }

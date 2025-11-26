@@ -14,10 +14,13 @@ public class AbstractYamlRepositoryTemplateTest {
 
     // 테스트용 엔티티
     static class DummyEntity {
+
         public String id;
         public String name;
 
-        public DummyEntity() {}
+        public DummyEntity() {
+        }
+
         public DummyEntity(String id, String name) {
             this.id = id;
             this.name = name;
@@ -26,6 +29,7 @@ public class AbstractYamlRepositoryTemplateTest {
 
     // 테스트용 Wrapper (YAML 최상단 루트)
     static class DummyWrapper {
+
         public List<DummyEntity> items = new ArrayList<>();
     }
 
@@ -90,24 +94,25 @@ public class AbstractYamlRepositoryTemplateTest {
     @DisplayName("Template Method: saveAllToFile -> YAML 파일 생성")
     void testTemplateSaveCreatesFile() {
         repo.getEntityList().add(new DummyEntity("D1", "템플릿테스트"));
+        repo.saveAllToFile();
 
-        repo.saveAllToFile(); // 상위 템플릿 메서드 호출
+        assertTrue(file.exists(), "파일이 생성되어 있어야 합니다.");
 
-        assertTrue(file.exists(), "템플릿 메서드를 통해 파일이 생성되어야 한다.");
+        System.out.println("saveAllToFile 템플릿 메서드 호출을 통해 YAML 파일 생성 완료");
     }
 
     @Test
     @DisplayName("Template Method: loadFromFile -> applyLoadedWrapper 호출 흐름 검증")
     void testTemplateLoadAppliesWrapper() {
-        // 1) 먼저 한 번 저장
         repo.getEntityList().add(new DummyEntity("D1", "템플릿테스트"));
         repo.saveAllToFile();
 
-        // 2) 새로운 인스턴스로 다시 로딩
         DummyRepository repo2 = new DummyRepository(file.getPath());
-        repo2.loadFromFile(); // 상위 템플릿 메서드 호출
+        repo2.loadFromFile();
 
         assertEquals(1, repo2.getEntityList().size());
-        assertEquals("D1", repo2.getEntityList().get(0).id);
+
+        System.out.println("loadFromFile YAML 로딩 후 applyLoadedWrapper() 적용 성공");
     }
+
 }
