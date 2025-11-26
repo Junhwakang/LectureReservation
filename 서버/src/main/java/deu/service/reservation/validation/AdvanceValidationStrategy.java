@@ -16,30 +16,41 @@ import java.util.List;
  *
  * @author User
  */
-
 /**
- * SFR-214
- * 서버는 개인/조별 학습 목적 예약이 최소 하루 전에 신청되었는지 검증해야 한다.
+ * SFR-214 서버는 개인/조별 학습 목적 예약이 최소 하루 전에 신청되었는지 검증해야 한다.
  */
-public class AdvanceValidationStrategy implements ReservationValidationStrategy {
-    private static final DateTimeFormatter FORMATTER =
-            DateTimeFormatter.ofPattern("yyyy-MM-dd");
+public class AdvanceValidationStrategy implements ReservationValidationBehavior {
+
+    private static final DateTimeFormatter FORMATTER
+            = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @Override
     public void validate(RoomReservationRequest payload,
-                         ReservationRepository repo,
-                         List<RoomReservation> userReservations)
+            ReservationRepository repo,
+            List<RoomReservation> userReservations)
             throws ReservationValidationException {
 
         String purpose = payload.getPurpose();
-        if (purpose == null) return;
+        if (purpose == null || purpose.isBlank()) {
+            // 목적이 없으면 이 전략에서는 검사할 수 없음
+            return;
+        }
 
-        // 개인/조별 학습 목적일 때만 검증
-        boolean isLearningPurpose =
-                purpose.equals("개인 학습") || purpose.equals("조별 학습");
+        // UI에서 들어오는 값까지 고려해서 비교
+        // - "개인 학습" / "조별 학습" (공백 있음)
+        // - "개인학습"   / "조별학습"   (공백 없음, 시간표에 이렇게 찍혀 있을 가능성 큼)
+        boolean isLearningPurpose
+                = "개인 학습".equals(purpose)
+                || "조별 학습".equals(purpose)
+                || "개인학습".equals(purpose)
+                || "조별학습".equals(purpose);
 
-        if (!isLearningPurpose) return;
+        // 개인/조별 학습이 아니면 이 전략은 패스 (보강, 세미나 등)
+        if (!isLearningPurpose) {
+            return;
+        }
 
+        // 날짜 필수
         if (payload.getDate() == null || payload.getDate().isBlank()) {
             throw new ReservationValidationException("예약 날짜가 없습니다.");
         }
@@ -49,6 +60,9 @@ public class AdvanceValidationStrategy implements ReservationValidationStrategy 
             LocalDate today = LocalDate.now();
 
             // “최소 하루 전” = 예약 날짜 > 오늘
+            //   - 예약일 == 오늘    → 실패
+            //   - 예약일 <  오늘    → 실패
+            //   - 예약일 >  오늘    → 통과
             if (!reservationDate.isAfter(today)) {
                 throw new ReservationValidationException(
                         "개인/조별 학습 예약은 최소 하루 전에 신청해야 합니다."

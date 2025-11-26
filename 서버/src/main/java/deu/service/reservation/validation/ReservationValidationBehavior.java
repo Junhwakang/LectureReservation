@@ -16,7 +16,7 @@ import java.util.List;
  */
 
 // 검증 전략 인터페이스
-public interface ReservationValidationStrategy {
+public interface ReservationValidationBehavior {
 
     void validate(RoomReservationRequest request,
             ReservationRepository repo,

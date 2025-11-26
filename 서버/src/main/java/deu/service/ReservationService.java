@@ -62,6 +62,22 @@ public class ReservationService {
     // 예약 신청 // SFR-203 중복예약
     public BasicResponse createRoomReservation(RoomReservationRequest payload) {
         try {
+            if ((payload.getPurpose() == null || payload.getPurpose().isBlank())
+                    && payload.getTitle() != null && !payload.getTitle().isBlank()) {
+                payload.setPurpose(payload.getTitle().trim());
+            }
+
+            // 설명 → participantCount
+            if (payload.getParticipantCount() <= 0
+                    && payload.getDescription() != null && !payload.getDescription().isBlank()) {
+                int parsed = parseParticipantCount(payload.getDescription());
+                payload.setParticipantCount(parsed);
+            }
+
+            // 수용 인원 없으면 기본값 40 사용 (필요 없으면 제거해도 됨)
+            if (payload.getCapacity() <= 0) {
+                payload.setCapacity(40);
+            }
             // RoomReservation 엔티티 생성
             RoomReservation roomReservation = new RoomReservation();
             roomReservation.setBuildingName(payload.getBuildingName());
@@ -319,23 +335,22 @@ public class ReservationService {
             // label이 enum과 안 맞으면 그냥 null
         }
 
-        
         // 보강 or 세미나인지 확인
-        boolean isSupplyOrSeminar = 
-                purpose == ReservationPurpose.SUPPLEMENT ||
-                purpose == ReservationPurpose.SEMINAR;
-        
+        boolean isSupplyOrSeminar
+                = purpose == ReservationPurpose.SUPPLEMENT
+                || purpose == ReservationPurpose.SEMINAR;
+
         String reasonForCancel;
-        if(isSupplyOrSeminar){
+        if (isSupplyOrSeminar) {
             //SFR-218 : 보강 / 세미나로 인한 알림 전송
             reasonForCancel = "보강 및 세미나의 이유로 기존 예약이 취소되었습니다.";
-        }else{
+        } else {
             // 일반적인 이유
             reasonForCancel = "교수 예약으로 자동 취소 되었습니다.";
         }
-        
+
         ReservationSubject subject = ReservationSubject.getInstance();
-        
+
         for (RoomReservation conflict : conflicts) {
             // 상태를 취소로 바꾸고, 취소 사유 남기기
             conflict.setStatus("취소");
@@ -346,4 +361,43 @@ public class ReservationService {
         // 변경사항 파일에 반영
         repo.saveToFile();
     }
+
+    // 제목 / 설명을 purpose, participantCount 로 변환
+    private void mapUiFieldsToDomainFields(RoomReservationRequest payload) {
+
+        // 1) 목적 없고, 제목은 있을 때 → 제목을 목적으로 사용
+        if ((payload.getPurpose() == null || payload.getPurpose().isBlank())
+                && payload.getTitle() != null && !payload.getTitle().isBlank()) {
+
+            // UI에서 "세미나", "보강", "개인 학습" 이런 식으로 적는다고 가정
+            payload.setPurpose(payload.getTitle().trim());
+        }
+
+        // 2) 인원수가 0이고, 설명에 "3명", "10", "인원 5" 등으로 적혀 있을 때
+        if (payload.getParticipantCount() <= 0
+                && payload.getDescription() != null && !payload.getDescription().isBlank()) {
+
+            int parsed = parseParticipantCount(payload.getDescription());
+            payload.setParticipantCount(parsed);
+        }
+
+        // 3) 수용 인원(capacity)이 0이면 기본값 40으로
+        if (payload.getCapacity() <= 0) {
+            payload.setCapacity(40); // 학교 상황에 맞게 조정 가능
+        }
+    }
+
+// "3명", "인원 10", "10" 같은 문자열에서 숫자만 추출
+    private int parseParticipantCount(String description) {
+        String digits = description.replaceAll("[^0-9]", ""); // 숫자만 남기기
+        if (digits.isEmpty()) {
+            return 0; // 숫자가 아예 없으면 0으로
+        }
+        try {
+            return Integer.parseInt(digits);
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+    }
+
 }

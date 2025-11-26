@@ -16,7 +16,7 @@ import java.util.*;
  * SFR-203
  * 서버는 예약 신청 시 중복 예약이 발생하지 않도록 검증할 수 있어야 한다.
  */
-public class DuplicateReservationValidationStrategy implements ReservationValidationStrategy {
+public class DuplicateReservationValidationStrategy implements ReservationValidationBehavior {
     @Override
     public void validate(RoomReservationRequest request,
                          ReservationRepository repo,

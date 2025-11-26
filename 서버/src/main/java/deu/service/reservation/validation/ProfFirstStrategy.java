@@ -23,7 +23,7 @@ import java.util.List;
  * 이미 같은 시간/강의실에 교수 예약이 있으면
  * 학생/세미나 예약은 거절한다.
  */
-public class ProfFirstStrategy implements ReservationValidationStrategy {
+public class ProfFirstStrategy implements ReservationValidationBehavior {
     
     @Override
     public void validate(RoomReservationRequest payload,

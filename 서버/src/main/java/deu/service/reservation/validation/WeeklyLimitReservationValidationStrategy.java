@@ -14,7 +14,7 @@ import java.util.List;
  *
  * @author User
  */
-public class WeeklyLimitReservationValidationStrategy implements ReservationValidationStrategy {
+public class WeeklyLimitReservationValidationStrategy implements ReservationValidationBehavior {
     private static final int LIMIT_PER_7_DAYS = 5;
 
     @Override

@@ -14,7 +14,7 @@ import java.util.List;
  *
  * @author User
  */
-public class CapacityLimitStrategy implements ReservationValidationStrategy {
+public class CapacityLimitStrategy implements ReservationValidationBehavior {
     public void validate(RoomReservationRequest payload,
                          ReservationRepository repo,
                          List<RoomReservation> userReservations)

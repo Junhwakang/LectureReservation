@@ -15,9 +15,9 @@ import java.util.List;
  */
 
 public class ReservationValidator {
-    private final List<ReservationValidationStrategy> strategies = new ArrayList<>();
+    private final List<ReservationValidationBehavior> strategies = new ArrayList<>();
     
-    public ReservationValidator addStrategy(ReservationValidationStrategy strategy){
+    public ReservationValidator addStrategy(ReservationValidationBehavior strategy){
         strategies.add(strategy);
         return this;
     }
@@ -27,7 +27,7 @@ public class ReservationValidator {
                          List<RoomReservation> userReservations)
             throws ReservationValidationException {
 
-        for (ReservationValidationStrategy s : strategies) {
+        for (ReservationValidationBehavior s : strategies) {
             s.validate(request, repo, userReservations);
         }
     }
