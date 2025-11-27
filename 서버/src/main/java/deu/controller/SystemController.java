@@ -14,22 +14,19 @@ import deu.model.dto.response.BasicResponse;
 public class SystemController {
 
     private final UserController userController = UserController.getInstance();
-    // ⭐ Singleton 패턴: AccountManagerController 인스턴스 사용
     private final AccountManagerController accountManagerController = AccountManagerController.getInstance();
-    // UserManagementInvoker는 Singleton으로 가져옴
     private final UserManagementInvoker userManagementInvoker = UserManagementInvoker.getInstance();
     private final LectureController lectureController = LectureController.getInstance();
     private final ReservationController reservationController = ReservationController.getInstance();
-    // ⭐ 지연 초기화: ReservationManagementController는 예약 관리 요청이 올 때만 초기화
     private ReservationManagementController reservationManagementController;
 
     public Object handle(Object request) {
         try {
-            // ⭐ 커맨드 패턴 적용: Command 인터페이스 확인
-            if (request instanceof UserCommand command) { // 기존 UserCommand/UserManagementCommandRequest 로직 대체
+            // 커맨드 패턴 적용: Command 인터페이스 확인
+            if (request instanceof UserCommand command) { 
                 System.out.println("[SystemController] Command 타입 확인 완료");
                 System.out.println("[SystemController] 커맨드: " + command.getClass().getSimpleName());
-                // Invoker에게 전달 (더 이상 switch 문 없음!)
+                // Invoker에게 전달
                 return userManagementInvoker.executeCommand(command);
             }
 

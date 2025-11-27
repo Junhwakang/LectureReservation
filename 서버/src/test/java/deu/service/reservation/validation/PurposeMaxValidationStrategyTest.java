@@ -36,6 +36,8 @@ class PurposeMaxValidationStrategyTest {
         req.setPurpose(purpose);
         req.setStartTime(start);
         req.setEndTime(end);
+        
+        req.setDate("2025-01-01");
         return req;
     }
 
