@@ -22,61 +22,72 @@ public class UserController {
     }
 
     private final UserService userService = UserService.getInstance();
-    private final List<String> userNumbers = new ArrayList<>(); // 로그인 사용자 고유번호 저장용
+    private final List<String> userNumbers = new ArrayList<>();
 
-    // synchronized 는 이 메서드에 동시에 들어오지 못함: 첫 번째 스레드가 들어오면 락(lock)을 잡고, 다른 스레드들은 락이 풀릴 때까지 대기
+    // [일반 로그인] 대기열 적용
     public synchronized Object handleLogin(LoginRequest payload) {
         if (userNumbers.contains(payload.number)) {
             return new BasicResponse("400", "이미 로그인된 사용자입니다.");
         }
 
-        if (userNumbers.size() >= 3) {
-            return new BasicResponse("403", "현재 접속 인원 초과 (최대 3명)");
+        // 3명이 꽉 찼으면 자리가 날 때까지 대기
+        while (userNumbers.size() >= 3) {
+            try {
+                System.out.println("⏳ [대기 진입] 현재 인원 만원. " + payload.number + "님 대기 중...");
+                wait(); 
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return new BasicResponse("500", "서버 대기 중 오류 발생");
+            }
         }
 
         BasicResponse result = userService.login(payload);
         if ((result.code).equals("200")) {
-            userNumbers.add(payload.number); // 로그인 성공 시 번호 등록
+            userNumbers.add(payload.number);
+            System.out.println("✅ [입장] " + payload.number + "님 로그인 성공! (현재 접속자: " + userNumbers.size() + "명)");
         }
 
         return result;
     }
 
-    // 회원 가입 컨트롤러
     public Object handleSignup(SignupRequest payload) {
         return userService.signup(payload);
     }
 
-    // synchronized 는 이 메서드에 동시에 들어오지 못함: 첫 번째 스레드가 들어오면 락(lock)을 잡고, 다른 스레드들은 락이 풀릴 때까지 대기
+    // [로그아웃] 대기자 깨우기 (notifyAll)
     public synchronized Object handleLogout(LogoutRequest payload) {
-        // 로그아웃 시 번호 제거
         if(userNumbers.remove(payload.number)){
-            System.out.println("현재 접속자 수 " + userNumbers.size() + "명");
+            System.out.println("🚪 [퇴장] " + payload.number + "님 로그아웃. (현재 접속자: " + userNumbers.size() + "명)");
+            notifyAll(); // 대기 중인 사람 깨움
             return new BasicResponse("200", "로그아웃 성공");
-        }else{
-            return new BasicResponse("400", "로그아웃 실패");
+        } else {
+            return new BasicResponse("200", "이미 로그아웃 되었습니다.");
         }
     }
 
-    // 동시접속자 수 컨트롤러
     public CurrentResponse handleCurrentUser(){
         return new CurrentResponse(userNumbers.size());
     }
 
-    // 사용자 이름 반환 컨트롤러
     public Object handleFindUserName(FindUserNameRequest payload) {
         return userService.findUserName(payload);
     }
     
-    /**
-     * ⭐ Singleton 패턴: 외부에서 userNumbers에 사용자 추가 (AccountManager 로그인 시 사용)
-     * 
-     * @param number 사용자 번호
-     */
-    public synchronized void addUserNumber(String number) {
-        if (!userNumbers.contains(number)) {
-            userNumbers.add(number);
-            System.out.println("[UserController] ⭐ Singleton 인스턴스에 사용자 추가: " + number);
+    // [AccountManager용] boolean 반환으로 수정됨
+    public synchronized boolean addUserNumber(String number) {
+        if (userNumbers.contains(number)) return true;
+
+        while (userNumbers.size() >= 3) {
+            try {
+                System.out.println("⏳ [AccountManager 대기] " + number + " 대기 중...");
+                wait();
+            } catch (InterruptedException e) {
+                return false;
+            }
         }
+
+        userNumbers.add(number);
+        System.out.println("✅ [AccountManager 입장] " + number + "님 추가됨. (현재 접속자: " + userNumbers.size() + "명)");
+        return true;
     }
 }

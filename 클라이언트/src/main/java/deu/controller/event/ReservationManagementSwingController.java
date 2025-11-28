@@ -497,21 +497,34 @@ public class ReservationManagementSwingController {
 
     // 예약 대기 목록을 갱신하는 기능
     private void reservationListPanelRefresh() {
-        JPanel reservationListPanel = view.getReservationList();
-        reservationListPanel.removeAll();
-        reservationListPanel.setLayout(new GridLayout(0, 1, 0, 5)); // 세로 1열
+    JPanel reservationListPanel = view.getReservationList();
+    reservationListPanel.removeAll();
+    reservationListPanel.setLayout(new GridLayout(0, 1, 0, 5));
 
-        // 비동기 실행
-        SwingWorker<List<RoomReservation>, Void> worker = new SwingWorker<>() {
-            @Override
-            protected List<RoomReservation> doInBackground() {
-                return getAllReservationsFromServerOrFile();
-            }
+    // 비동기 실행
+    SwingWorker<List<RoomReservation>, Void> worker = new SwingWorker<>() {
+        @Override
+        protected List<RoomReservation> doInBackground() {
+            // 서버에서 데이터를 가져오는 부분
+            return getAllReservationsFromServerOrFile();
+        }
 
-            @Override
-            protected void done() {
-                try {
-                    List<RoomReservation> allRoomReservations = get();
+        @Override
+        protected void done() {
+            try {
+                // 데이터를 다 가져온 후 실행되는 곳 (여기에 넣어야 합니다!)
+                List<RoomReservation> allRoomReservations = get();
+
+                // ============ [디버깅 코드 시작] ============
+                System.out.println(">>> [DEBUG] 서버에서 가져온 예약 개수: " + allRoomReservations.size());
+                if (allRoomReservations.isEmpty()) {
+                    System.out.println(">>> [DEBUG] 가져온 데이터가 없습니다.");
+                } else {
+                    for (RoomReservation r : allRoomReservations) {
+                        System.out.println(">>> [DEBUG] 예약 ID: " + r.getId() + " / 상태값: [" + r.getStatus() + "]");
+                    }
+                }
+                // ============ [디버깅 코드 끝] ============
 
                     List<RoundReservationInformationButton> pendingReservations = getPendingReservations(allRoomReservations);
 
